@@ -5,6 +5,7 @@ import { Camera, Volume2, CheckCircle, Info, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useHaptic } from "@/hooks/useHaptic";
+import { CameraCapture } from "@/components/CameraCapture";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,36 +25,15 @@ export default function Upload() {
   const [uploadStage, setUploadStage] = useState<"upload" | "analyze" | "calculate" | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [cameraPermission, setCameraPermission] = useState<"prompt" | "granted" | "denied">("prompt");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showCamera, setShowCamera] = useState(false);
   const navigate = useNavigate();
   const { triggerLight, triggerSuccess, triggerError } = useHaptic();
 
-  const requestCameraPermission = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      stream.getTracks().forEach(track => track.stop());
-      setCameraPermission("granted");
-      triggerSuccess();
-      fileInputRef.current?.click();
-    } catch (error) {
-      setCameraPermission("denied");
-      triggerError();
-      toast.error("Camera access denied. Please enable camera permissions in your browser settings.");
-    }
-  };
-
-  const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string);
-        triggerSuccess();
-        toast.success("Photo captured successfully! ✓");
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleCameraCapture = (imageData: string) => {
+    setImage(imageData);
+    setShowCamera(false);
+    triggerSuccess();
+    toast.success("Photo captured successfully! ✓");
   };
 
   const initiateVerification = () => {
@@ -136,8 +116,17 @@ export default function Upload() {
   };
 
   return (
-    <div className="min-h-screen pb-20 bg-background">
-      <div className="px-4 py-6 max-w-screen-lg mx-auto">
+    <>
+      {/* Camera Component */}
+      {showCamera && (
+        <CameraCapture
+          onCapture={handleCameraCapture}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
+
+      <div className="min-h-screen pb-20 bg-background">
+        <div className="px-4 py-6 max-w-screen-lg mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Verify Your Cookstove</h1>
           <p className="text-muted-foreground">
@@ -183,24 +172,10 @@ export default function Upload() {
           <div className="space-y-6">
             {!image ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleImageCapture}
-                  className="hidden"
-                />
                 <button
                   onClick={() => {
-                    if (cameraPermission === "prompt") {
-                      requestCameraPermission();
-                    } else if (cameraPermission === "granted") {
-                      triggerLight();
-                      fileInputRef.current?.click();
-                    } else {
-                      toast.error("Camera access denied. Please enable camera permissions in your settings.");
-                    }
+                    triggerLight();
+                    setShowCamera(true);
                   }}
                   className="relative w-[100px] h-[100px] rounded-full bg-gradient-to-br from-primary to-success text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-pulse-soft mb-6 group"
                 >
@@ -209,11 +184,9 @@ export default function Upload() {
                 </button>
                 <h3 className="text-lg font-semibold mb-2">Ready to Capture</h3>
                 <p className="text-sm text-muted-foreground text-center mb-4 max-w-sm">
-                  {cameraPermission === "prompt" && "We'll request camera access when you tap the button"}
-                  {cameraPermission === "granted" && "Position your cookstove in good lighting and tap the button above"}
-                  {cameraPermission === "denied" && "Please enable camera permissions in your browser settings"}
+                  Position your cookstove in good lighting and tap the button above
                 </p>
-                <p className="text-xs text-muted-foreground">Tap the glowing button to take a photo 📸</p>
+                <p className="text-xs text-muted-foreground">Tap the glowing button to open camera 📸</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -350,6 +323,7 @@ export default function Upload() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+      </div>
+    </>
   );
 }

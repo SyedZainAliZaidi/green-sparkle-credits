@@ -13,6 +13,12 @@ export default {
       },
     },
     extend: {
+      spacing: {
+        'safe-top': 'var(--safe-top)',
+        'safe-bottom': 'var(--safe-bottom)',
+        'safe-left': 'var(--safe-left)',
+        'safe-right': 'var(--safe-right)',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

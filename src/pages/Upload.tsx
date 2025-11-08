@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Camera, Volume2, CheckCircle, Info, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useHaptic } from "@/hooks/useHaptic";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,8 +24,24 @@ export default function Upload() {
   const [uploadStage, setUploadStage] = useState<"upload" | "analyze" | "calculate" | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [cameraPermission, setCameraPermission] = useState<"prompt" | "granted" | "denied">("prompt");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { triggerLight, triggerSuccess, triggerError } = useHaptic();
+
+  const requestCameraPermission = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream.getTracks().forEach(track => track.stop());
+      setCameraPermission("granted");
+      triggerSuccess();
+      fileInputRef.current?.click();
+    } catch (error) {
+      setCameraPermission("denied");
+      triggerError();
+      toast.error("Camera access denied. Please enable camera permissions in your browser settings.");
+    }
+  };
 
   const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -32,6 +49,7 @@ export default function Upload() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result as string);
+        triggerSuccess();
         toast.success("Photo captured successfully! ✓");
       };
       reader.readAsDataURL(file);
@@ -41,11 +59,13 @@ export default function Upload() {
   const initiateVerification = () => {
     if (!image) {
       toast.error("Please capture an image first");
+      triggerError();
       const button = document.getElementById("verify-button");
       button?.classList.add("animate-shake");
       setTimeout(() => button?.classList.remove("animate-shake"), 500);
       return;
     }
+    triggerLight();
     setShowConfirmDialog(true);
   };
 
@@ -111,6 +131,7 @@ export default function Upload() {
   };
 
   const handleVoiceGuidance = () => {
+    triggerLight();
     toast.info("🔊 Voice guidance: Take a clear photo of your cookstove from the front. Make sure the entire stove is visible.");
   };
 
@@ -171,7 +192,16 @@ export default function Upload() {
                   className="hidden"
                 />
                 <button
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => {
+                    if (cameraPermission === "prompt") {
+                      requestCameraPermission();
+                    } else if (cameraPermission === "granted") {
+                      triggerLight();
+                      fileInputRef.current?.click();
+                    } else {
+                      toast.error("Camera access denied. Please enable camera permissions in your settings.");
+                    }
+                  }}
                   className="relative w-[100px] h-[100px] rounded-full bg-gradient-to-br from-primary to-success text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-pulse-soft mb-6 group"
                 >
                   <Camera className="h-12 w-12 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" />
@@ -179,7 +209,9 @@ export default function Upload() {
                 </button>
                 <h3 className="text-lg font-semibold mb-2">Ready to Capture</h3>
                 <p className="text-sm text-muted-foreground text-center mb-4 max-w-sm">
-                  Position your cookstove in good lighting and tap the button above
+                  {cameraPermission === "prompt" && "We'll request camera access when you tap the button"}
+                  {cameraPermission === "granted" && "Position your cookstove in good lighting and tap the button above"}
+                  {cameraPermission === "denied" && "Please enable camera permissions in your browser settings"}
                 </p>
                 <p className="text-xs text-muted-foreground">Tap the glowing button to take a photo 📸</p>
               </div>

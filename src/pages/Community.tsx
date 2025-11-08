@@ -7,6 +7,9 @@ import { Heart, MapPin, Coins, Clock, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useHaptic } from "@/hooks/useHaptic";
+import PullToRefresh from "react-simple-pull-to-refresh";
+import { useSwipeable } from "react-swipeable";
 
 interface Submission {
   id: number;
@@ -24,6 +27,7 @@ export default function Community() {
   const navigate = useNavigate();
   const [hasSubmissions] = useState(true); // Set to false to see empty state
   const [isLoading, setIsLoading] = useState(true);
+  const { triggerLight, triggerSuccess } = useHaptic();
   const [submissions, setSubmissions] = useState<Submission[]>([
     {
       id: 1,
@@ -102,6 +106,7 @@ export default function Community() {
   }, []);
 
   const handleLike = (id: number) => {
+    triggerLight();
     setSubmissions(subs =>
       subs.map(sub => {
         if (sub.id === id) {
@@ -109,6 +114,7 @@ export default function Community() {
           const newLiked = !sub.liked;
           
           if (newLiked) {
+            triggerSuccess();
             toast.success("Liked! ❤️");
           }
           
@@ -117,6 +123,14 @@ export default function Community() {
         return sub;
       })
     );
+  };
+
+  const handleRefresh = async () => {
+    triggerLight();
+    // Simulate data refresh
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    triggerSuccess();
+    toast.success("Feed refreshed! ✨");
   };
 
   const totalCO2 = 12.45;
@@ -144,8 +158,9 @@ export default function Community() {
   }
 
   return (
-    <div className="min-h-screen pb-20 bg-background animate-fade-in">
-      <div className="px-4 py-6 max-w-screen-lg mx-auto">
+    <PullToRefresh onRefresh={handleRefresh} pullingContent="">
+      <div className="min-h-screen pb-20 bg-background animate-fade-in">
+        <div className="px-4 py-6 max-w-screen-lg mx-auto">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground mb-2">Community Impact</h1>
@@ -203,16 +218,22 @@ export default function Community() {
 
         {/* Filter Options */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          <Button variant="default" size="sm">All</Button>
-          <Button variant="outline" size="sm">This Week</Button>
-          <Button variant="outline" size="sm">This Month</Button>
-          <Button variant="outline" size="sm">My Region</Button>
+          <Button variant="default" size="sm" className="min-h-[44px]" onClick={triggerLight}>All</Button>
+          <Button variant="outline" size="sm" className="min-h-[44px]" onClick={triggerLight}>This Week</Button>
+          <Button variant="outline" size="sm" className="min-h-[44px]" onClick={triggerLight}>This Month</Button>
+          <Button variant="outline" size="sm" className="min-h-[44px]" onClick={triggerLight}>My Region</Button>
         </div>
 
         {/* Submissions Grid */}
         <div className="grid gap-4">
-          {submissions.map((submission) => (
-            <Card key={submission.id} className="overflow-hidden hover:shadow-lg transition-all duration-300">
+          {submissions.map((submission) => {
+            const swipeHandlers = useSwipeable({
+              onSwipedLeft: () => handleLike(submission.id),
+              trackMouse: false,
+            });
+            
+            return (
+            <Card key={submission.id} {...swipeHandlers} className="overflow-hidden hover:shadow-lg transition-all duration-300">
               <div className="flex gap-4 p-4">
                 {/* Image */}
                 <div className="w-24 h-24 flex-shrink-0 rounded-lg bg-muted overflow-hidden">
@@ -265,7 +286,8 @@ export default function Community() {
                 </div>
               </div>
             </Card>
-          ))}
+          );
+          })}
         </div>
 
         {/* Load More */}
@@ -276,7 +298,8 @@ export default function Community() {
         </div>
         </>
         )}
+        </div>
       </div>
-    </div>
+    </PullToRefresh>
   );
 }

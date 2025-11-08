@@ -121,7 +121,19 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  :root {
+    --safe-top: env(safe-area-inset-top);
+    --safe-bottom: env(safe-area-inset-bottom);
+    --safe-left: env(safe-area-inset-left);
+    --safe-right: env(safe-area-inset-right);
+  }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Ensure minimum touch target size */
+  button, a, [role="button"] {
+    @apply min-h-[44px] min-w-[44px];
   }
 }

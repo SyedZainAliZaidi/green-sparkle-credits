@@ -3,9 +3,11 @@ import { Card } from "@/components/ui/card";
 import { Leaf, Users, TrendingUp, Camera, Award, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { StatCard } from "@/components/StatCard";
+import { useHaptic } from "@/hooks/useHaptic";
 
 export default function Home() {
   const navigate = useNavigate();
+  const { triggerLight } = useHaptic();
 
   const recentSubmissions = Array(6).fill(null).map((_, i) => ({
     id: i,
@@ -49,8 +51,11 @@ export default function Home() {
 
           <Button
             size="lg"
-            onClick={() => navigate("/upload")}
-            className="w-full max-w-sm mx-auto flex items-center justify-center gap-2 bg-background text-primary hover:bg-background/90 shadow-lg h-14 text-lg"
+            onClick={() => {
+              triggerLight();
+              navigate("/upload");
+            }}
+            className="w-full max-w-sm mx-auto flex items-center justify-center gap-2 bg-background text-primary hover:bg-background/90 shadow-lg min-h-[56px] text-lg"
           >
             <Camera className="h-5 w-5" />
             Start Verification
@@ -95,7 +100,7 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {recentSubmissions.map((submission) => (
-              <Card key={submission.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer">
+              <Card key={submission.id} onClick={triggerLight} className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer">
                 <div className="aspect-square bg-muted relative">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className="absolute bottom-2 left-2 right-2">
@@ -118,7 +123,10 @@ export default function Home() {
         <div>
           <h2 className="text-xl font-bold text-foreground mb-4">Learn More</h2>
           <div className="grid gap-4">
-            <Card className="p-4 hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => navigate("/quiz")}>
+            <Card className="p-4 hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => {
+              triggerLight();
+              navigate("/quiz");
+            }}>
               <div className="flex items-start gap-4">
                 <div className="p-3 rounded-lg bg-accent/10">
                   <BookOpen className="h-6 w-6 text-accent" />

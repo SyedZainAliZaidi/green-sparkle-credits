@@ -3,20 +3,41 @@ import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/StatCard";
 import { EmptyState } from "@/components/EmptyState";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
+import { AchievementModal } from "@/components/AchievementModal";
+import { BadgeCollection } from "@/components/BadgeCollection";
+import { StreakTracker } from "@/components/StreakTracker";
+import { Leaderboard } from "@/components/Leaderboard";
+import { Progress } from "@/components/ui/progress";
 import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind, Camera } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useNavigate } from "react-router-dom";
+import { achievementsData } from "@/data/achievements";
+import { Achievement, LeaderboardEntry, StreakData } from "@/types/achievements";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [hasData] = useState(true); // Set to false to see empty state
+  const [hasData] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
   
   useEffect(() => {
     // Simulate data loading
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Simulate achievement unlock on page load (for demo)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const unlockedAchievement = achievementsData.find(a => a.id === "first_submission");
+      if (unlockedAchievement && !showAchievementModal) {
+        setSelectedAchievement(unlockedAchievement);
+        setShowAchievementModal(true);
+      }
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -81,12 +102,35 @@ export default function Dashboard() {
     { week: "Week 7", credits: 245 },
   ];
 
-  const achievements = [
-    { name: "Bronze Member", icon: Award, color: "text-amber-600", achieved: true },
-    { name: "Silver Member", icon: Award, color: "text-gray-400", achieved: true },
-    { name: "Gold Member", icon: Award, color: "text-yellow-500", achieved: true },
-    { name: "Platinum", icon: Award, color: "text-blue-400", achieved: false },
+  // Mock data for leaderboard
+  const leaderboardData: LeaderboardEntry[] = [
+    { rank: 1, userId: "1", username: "Sarah Green", credits: 1250, isCurrentUser: false },
+    { rank: 2, userId: "2", username: "Mike Earth", credits: 1180, isCurrentUser: false },
+    { rank: 3, userId: "3", username: "Emma Forest", credits: 980, isCurrentUser: false },
+    { rank: 4, userId: "4", username: "You", credits: 245, isCurrentUser: true },
+    { rank: 5, userId: "5", username: "John Climate", credits: 220, isCurrentUser: false },
+    { rank: 6, userId: "6", username: "Lisa Solar", credits: 195, isCurrentUser: false },
+    { rank: 7, userId: "7", username: "Tom Wind", credits: 175, isCurrentUser: false },
+    { rank: 8, userId: "8", username: "Anna Eco", credits: 160, isCurrentUser: false },
+    { rank: 9, userId: "9", username: "David Clean", credits: 145, isCurrentUser: false },
+    { rank: 10, userId: "10", username: "Sophie Nature", credits: 130, isCurrentUser: false },
   ];
+
+  // Mock streak data
+  const streakData: StreakData = {
+    currentStreak: 7,
+    longestStreak: 12,
+    submissionDays: [
+      new Date(2025, 10, 1),
+      new Date(2025, 10, 2),
+      new Date(2025, 10, 3),
+      new Date(2025, 10, 4),
+      new Date(2025, 10, 5),
+      new Date(2025, 10, 6),
+      new Date(2025, 10, 7),
+    ],
+    lastSubmission: new Date(2025, 10, 7),
+  };
 
   return (
     <div className="min-h-screen pb-20 bg-background">
@@ -209,31 +253,56 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Achievements */}
+        {/* Achievement Progress */}
         <Card className="p-6 mb-6">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <Award className="h-5 w-5 text-primary" />
-            Your Achievements
+            Achievement Progress
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {achievements.map((achievement) => (
-              <div
-                key={achievement.name}
-                className={`p-4 rounded-lg border-2 transition-all duration-300 ${
-                  achievement.achieved
-                    ? "border-primary bg-primary/5"
-                    : "border-muted bg-muted/20 opacity-50"
-                }`}
-              >
-                <achievement.icon className={`h-8 w-8 mx-auto mb-2 ${achievement.color}`} />
-                <p className="text-xs text-center font-medium">{achievement.name}</p>
+          <div className="space-y-4">
+            {achievementsData.slice(0, 4).map((achievement) => (
+              <div key={achievement.id} className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">{achievement.icon}</span>
+                    <span className="font-medium text-foreground">{achievement.name}</span>
+                    {achievement.unlocked && <span className="text-success">✓</span>}
+                  </div>
+                  <span className="text-muted-foreground">
+                    {achievement.currentProgress}/{achievement.requirement}
+                  </span>
+                </div>
+                <Progress 
+                  value={(achievement.currentProgress / achievement.requirement) * 100} 
+                  className="h-2"
+                />
               </div>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground text-center mt-4">
-            Earn 300 credits to unlock Platinum status!
-          </p>
         </Card>
+
+        {/* Badge Collection */}
+        <div className="mb-6">
+          <BadgeCollection 
+            achievements={achievementsData}
+            onBadgeClick={(achievement) => {
+              if (achievement.unlocked) {
+                setSelectedAchievement(achievement);
+                setShowAchievementModal(true);
+              }
+            }}
+          />
+        </div>
+
+        {/* Streak Tracker */}
+        <div className="mb-6">
+          <StreakTracker streakData={streakData} />
+        </div>
+
+        {/* Leaderboard */}
+        <div className="mb-6">
+          <Leaderboard entries={leaderboardData} currentUserRank={4} />
+        </div>
 
         {/* Regional Climate Data */}
         <div>
@@ -267,6 +336,13 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Achievement Modal */}
+      <AchievementModal
+        achievement={selectedAchievement}
+        isOpen={showAchievementModal}
+        onClose={() => setShowAchievementModal(false)}
+      />
     </div>
   );
 }

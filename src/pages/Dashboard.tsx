@@ -11,6 +11,9 @@ import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind, Camera, Globe, Image as ImageIcon, DollarSign, Users } from "lucide-react";
+import { SolarPotentialCard } from "@/components/SolarPotentialCard";
+import { AirQualityCard } from "@/components/AirQualityCard";
+import { ImpactMap } from "@/components/ImpactMap";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useNavigate } from "react-router-dom";
 import { achievementsData } from "@/data/achievements";
@@ -335,48 +338,14 @@ export default function Dashboard() {
           <Leaderboard entries={leaderboardData} currentUserRank={4} />
         </div>
 
-        {/* Regional Data Cards */}
+        {/* Climate Data Visualizations */}
         <div className="mb-6">
-          <h3 className="font-semibold mb-4">Regional Climate Data</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Card className="p-5 bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/20 hover:shadow-lg transition-all duration-300">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="p-2 rounded-lg bg-amber-500/10">
-                      <Zap className="h-5 w-5 text-amber-600" />
-                    </div>
-                    <p className="text-sm text-muted-foreground font-medium">Solar Potential</p>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground mb-1">High</p>
-                  <p className="text-sm text-amber-600 font-medium">5.8 kWh/m²/day average</p>
-                </div>
-                <span className="text-3xl">☀️</span>
-              </div>
-              <p className="text-xs text-muted-foreground pt-3 border-t">
-                Data from NASA POWER
-              </p>
-            </Card>
-
-            <Card className="p-5 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 hover:shadow-lg transition-all duration-300">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="p-2 rounded-lg bg-blue-500/10">
-                      <Wind className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <p className="text-sm text-muted-foreground font-medium">Air Quality Index</p>
-                  </div>
-                  <p className="text-2xl font-bold text-foreground mb-1">Moderate</p>
-                  <p className="text-sm text-blue-600 font-medium">Improving with clean cookstoves</p>
-                </div>
-                <span className="text-3xl">💨</span>
-              </div>
-              <p className="text-xs text-muted-foreground pt-3 border-t">
-                Data from OpenAQ
-              </p>
-            </Card>
+          <h3 className="font-semibold mb-4">Real-Time Climate Data</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <SolarPotentialCard />
+            <AirQualityCard />
           </div>
+          <ImpactMap />
         </div>
       </div>
 

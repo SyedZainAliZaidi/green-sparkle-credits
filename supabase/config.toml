@@ -1,1 +1,7 @@
 project_id = "azipmyqrmxrkskwpyfap"
+
+[functions.text-to-speech]
+verify_jwt = false
+
+[functions.climate-data]
+verify_jwt = false

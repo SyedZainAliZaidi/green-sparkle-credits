@@ -1,9 +1,21 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/EmptyState";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
-import { Heart, MapPin, Coins, Clock, Upload } from "lucide-react";
+import { SubmissionDetailModal } from "@/components/SubmissionDetailModal";
+import { UserProfileModal } from "@/components/UserProfileModal";
+import { RegionalImpactMap } from "@/components/RegionalImpactMap";
+import { FeaturedStoriesCarousel } from "@/components/FeaturedStoriesCarousel";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Heart, MapPin, Coins, Clock, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -14,86 +26,160 @@ import { useSwipeable } from "react-swipeable";
 interface Submission {
   id: number;
   user: string;
+  avatar?: string;
   location: string;
   cookstoveType: string;
+  efficiencyRating: number;
   credits: number;
   likes: number;
   timestamp: string;
   image: string;
   liked: boolean;
+  co2Prevented: number;
+  healthBenefit: string;
+  comments: Array<{
+    id: number;
+    user: string;
+    avatar?: string;
+    text: string;
+    timestamp: string;
+  }>;
+}
+
+interface UserProfile {
+  username: string;
+  avatar?: string;
+  location: string;
+  totalCredits: number;
+  submissions: number;
+  badges: string[];
+  isFollowing: boolean;
 }
 
 export default function Community() {
   const navigate = useNavigate();
-  const [hasSubmissions] = useState(true); // Set to false to see empty state
+  const [hasSubmissions] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const { triggerLight, triggerSuccess } = useHaptic();
+  
+  // Modal states
+  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  
+  // Filter states
+  const [regionFilter, setRegionFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("recent");
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  
   const [submissions, setSubmissions] = useState<Submission[]>([
     {
       id: 1,
       user: "Amina K.",
       location: "Nairobi, Kenya",
       cookstoveType: "Rocket Stove",
+      efficiencyRating: 85,
       credits: 25,
       likes: 34,
       timestamp: "2 hours ago",
       image: "https://images.unsplash.com/photo-1580538000000-80000000?w=400&h=400&fit=crop",
       liked: false,
+      co2Prevented: 12.5,
+      healthBenefit: "Reduced smoke inhalation by 85%, improving respiratory health for entire family",
+      comments: [
+        { id: 1, user: "Sarah W.", text: "Amazing work! Keep inspiring us! 💚", timestamp: "1h ago" },
+        { id: 2, user: "Grace M.", text: "This is so inspiring!", timestamp: "45m ago" },
+        { id: 3, user: "Mary L.", text: "Well done! Your family must be proud 🌟", timestamp: "20m ago" },
+      ],
     },
     {
       id: 2,
       user: "Grace M.",
       location: "Kampala, Uganda",
       cookstoveType: "Improved Charcoal",
+      efficiencyRating: 78,
       credits: 22,
       likes: 28,
       timestamp: "5 hours ago",
       image: "https://images.unsplash.com/photo-1580538100000-80000000?w=400&h=400&fit=crop",
       liked: false,
+      co2Prevented: 8.3,
+      healthBenefit: "60% reduction in indoor air pollution",
+      comments: [
+        { id: 1, user: "Amina K.", text: "Love this! 🔥", timestamp: "2h ago" },
+        { id: 2, user: "Fatima N.", text: "Great choice of stove!", timestamp: "1h ago" },
+      ],
     },
     {
       id: 3,
       user: "Fatima N.",
       location: "Dar es Salaam, Tanzania",
       cookstoveType: "Gasifier Stove",
+      efficiencyRating: 92,
       credits: 28,
       likes: 42,
       timestamp: "1 day ago",
       image: "https://images.unsplash.com/photo-1580538200000-80000000?w=400&h=400&fit=crop",
       liked: true,
+      co2Prevented: 15.7,
+      healthBenefit: "Nearly smoke-free cooking, major improvement in kitchen air quality",
+      comments: [
+        { id: 1, user: "Mary L.", text: "Incredible impact! 🌍", timestamp: "12h ago" },
+        { id: 2, user: "Sarah W.", text: "This is the future!", timestamp: "8h ago" },
+        { id: 3, user: "Esther K.", text: "Need to get one of these!", timestamp: "5h ago" },
+      ],
     },
     {
       id: 4,
       user: "Sarah W.",
       location: "Kigali, Rwanda",
       cookstoveType: "Rocket Stove",
+      efficiencyRating: 85,
       credits: 25,
       likes: 31,
       timestamp: "1 day ago",
       image: "https://images.unsplash.com/photo-1580538300000-80000000?w=400&h=400&fit=crop",
       liked: false,
+      co2Prevented: 11.2,
+      healthBenefit: "Clean cooking for family of 6",
+      comments: [
+        { id: 1, user: "Grace M.", text: "Beautiful work! 💪", timestamp: "8h ago" },
+      ],
     },
     {
       id: 5,
       user: "Mary L.",
       location: "Nairobi, Kenya",
       cookstoveType: "Solar Cooker",
+      efficiencyRating: 95,
       credits: 30,
       likes: 56,
       timestamp: "2 days ago",
       image: "https://images.unsplash.com/photo-1580538400000-80000000?w=400&h=400&fit=crop",
       liked: false,
+      co2Prevented: 18.4,
+      healthBenefit: "Zero emissions, completely sustainable cooking solution",
+      comments: [
+        { id: 1, user: "Amina K.", text: "Solar power! Love it! ☀️", timestamp: "1d ago" },
+        { id: 2, user: "Fatima N.", text: "This is revolutionary!", timestamp: "18h ago" },
+      ],
     },
     {
       id: 6,
       user: "Esther K.",
       location: "Mombasa, Kenya",
       cookstoveType: "Improved Charcoal",
+      efficiencyRating: 75,
       credits: 22,
       likes: 25,
       timestamp: "2 days ago",
       image: "https://images.unsplash.com/photo-1580538500000-80000000?w=400&h=400&fit=crop",
       liked: false,
+      co2Prevented: 7.8,
+      healthBenefit: "Significant reduction in cooking time and fuel use",
+      comments: [
+        { id: 1, user: "Sarah W.", text: "Keep up the good work! 🌟", timestamp: "1d ago" },
+      ],
     },
   ]);
 
@@ -127,10 +213,58 @@ export default function Community() {
 
   const handleRefresh = async () => {
     triggerLight();
-    // Simulate data refresh
     await new Promise(resolve => setTimeout(resolve, 1000));
     triggerSuccess();
     toast.success("Feed refreshed! ✨");
+  };
+
+  const handleSubmissionClick = (submission: Submission) => {
+    triggerLight();
+    setSelectedSubmission(submission);
+  };
+
+  const handleUserClick = (username: string) => {
+    triggerLight();
+    // Mock user profile data
+    setUserProfile({
+      username,
+      location: submissions.find(s => s.user === username)?.location || "East Africa",
+      totalCredits: 342,
+      submissions: 12,
+      badges: ["🥇", "🔥", "🌟", "💚"],
+      isFollowing: false,
+    });
+    setSelectedUser(username);
+  };
+
+  const handleRegionChange = (value: string) => {
+    triggerLight();
+    setRegionFilter(value);
+    updateActiveFilters(value, sortBy);
+  };
+
+  const handleSortChange = (value: string) => {
+    triggerLight();
+    setSortBy(value);
+    updateActiveFilters(regionFilter, value);
+  };
+
+  const updateActiveFilters = (region: string, sort: string) => {
+    const filters: string[] = [];
+    if (region !== "all") filters.push(region === "my-region" ? "My Region" : region === "following" ? "Following" : region);
+    if (sort !== "recent") filters.push(sort === "most-liked" ? "Most Liked" : "Highest Impact");
+    setActiveFilters(filters);
+  };
+
+  const removeFilter = (filter: string) => {
+    triggerLight();
+    if (filter === "My Region" || filter === "Following") {
+      setRegionFilter("all");
+    } else if (filter === "Most Liked" || filter === "Highest Impact") {
+      setSortBy("recent");
+    }
+    const newFilters = activeFilters.filter(f => f !== filter);
+    setActiveFilters(newFilters);
   };
 
   const totalCO2 = 12.45;
@@ -216,13 +350,57 @@ export default function Community() {
           </div>
         </Card>
 
-        {/* Filter Options */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          <Button variant="default" size="sm" className="min-h-[44px]" onClick={triggerLight}>All</Button>
-          <Button variant="outline" size="sm" className="min-h-[44px]" onClick={triggerLight}>This Week</Button>
-          <Button variant="outline" size="sm" className="min-h-[44px]" onClick={triggerLight}>This Month</Button>
-          <Button variant="outline" size="sm" className="min-h-[44px]" onClick={triggerLight}>My Region</Button>
+        {/* Featured Stories Carousel */}
+        <div className="mb-6">
+          <FeaturedStoriesCarousel />
         </div>
+
+        {/* Regional Impact Map */}
+        <div className="mb-6">
+          <RegionalImpactMap />
+        </div>
+
+        {/* Filter and Sort Options */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <Select value={regionFilter} onValueChange={handleRegionChange}>
+            <SelectTrigger className="w-full sm:w-[180px] min-h-[44px]">
+              <SelectValue placeholder="All Regions" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="all">All Regions</SelectItem>
+              <SelectItem value="my-region">My Region</SelectItem>
+              <SelectItem value="following">Following</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={handleSortChange}>
+            <SelectTrigger className="w-full sm:w-[180px] min-h-[44px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="recent">Recent</SelectItem>
+              <SelectItem value="most-liked">Most Liked</SelectItem>
+              <SelectItem value="highest-impact">Highest Impact</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Active Filter Chips */}
+        {activeFilters.length > 0 && (
+          <div className="flex gap-2 mb-4 flex-wrap">
+            {activeFilters.map((filter) => (
+              <Badge
+                key={filter}
+                variant="secondary"
+                className="gap-1 cursor-pointer hover:bg-secondary/80"
+                onClick={() => removeFilter(filter)}
+              >
+                {filter}
+                <X className="h-3 w-3" />
+              </Badge>
+            ))}
+          </div>
+        )}
 
         {/* Submissions Grid */}
         <div className="grid gap-4">
@@ -233,7 +411,12 @@ export default function Community() {
             });
             
             return (
-            <Card key={submission.id} {...swipeHandlers} className="overflow-hidden hover:shadow-lg transition-all duration-300">
+            <Card 
+              key={submission.id} 
+              {...swipeHandlers} 
+              className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
+              onClick={() => handleSubmissionClick(submission)}
+            >
               <div className="flex gap-4 p-4">
                 {/* Image */}
                 <div className="w-24 h-24 flex-shrink-0 rounded-lg bg-muted overflow-hidden">
@@ -257,7 +440,10 @@ export default function Community() {
                         "h-8 px-2 gap-1",
                         submission.liked && "text-destructive"
                       )}
-                      onClick={() => handleLike(submission.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLike(submission.id);
+                      }}
                     >
                       <Heart
                         className={cn(
@@ -299,6 +485,21 @@ export default function Community() {
         </>
         )}
         </div>
+
+        {/* Modals */}
+        <SubmissionDetailModal
+          open={!!selectedSubmission}
+          onOpenChange={(open) => !open && setSelectedSubmission(null)}
+          submission={selectedSubmission}
+          onLike={handleLike}
+          onUserClick={handleUserClick}
+        />
+
+        <UserProfileModal
+          open={!!selectedUser}
+          onOpenChange={(open) => !open && setSelectedUser(null)}
+          profile={userProfile}
+        />
       </div>
     </PullToRefresh>
   );

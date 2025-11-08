@@ -201,28 +201,28 @@ export default function Dashboard() {
   const womenBenefited = 18;
 
   return (
-    <div className="min-h-screen pb-20 bg-background">
-      <div className="px-4 py-6 max-w-screen-lg mx-auto">
+    <div className="min-h-screen bg-background w-full overflow-x-hidden">
+      <div className="py-6 sm:py-8 max-w-screen-lg mx-auto space-y-6 sm:space-y-8">
         {/* Hero Stat Card */}
-        <Card className="p-8 mb-6 bg-gradient-to-br from-primary via-success to-primary text-primary-foreground relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24" />
+        <Card className="p-6 sm:p-8 bg-gradient-to-br from-primary via-success to-primary text-primary-foreground relative overflow-hidden shadow-card">
+          <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 sm:w-48 sm:h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24" />
           
           <div className="relative">
-            <div className="flex items-center gap-2 mb-3">
-              <Coins className="h-6 w-6 opacity-90" />
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <Coins className="h-5 w-5 sm:h-6 sm:w-6 opacity-90" />
               <p className="text-sm font-medium opacity-90">Total Credits Earned</p>
             </div>
             
-            <div className="space-y-2 mb-4">
-              <div className="text-6xl font-bold">
+            <div className="space-y-2 mb-3 sm:mb-4">
+              <div className="text-4xl sm:text-6xl font-bold">
                 <AnimatedCounter end={totalCredits} duration={2000} />
               </div>
               
-              <div className="flex items-baseline gap-3">
+              <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
                 <div className="flex items-center gap-1">
-                  <DollarSign className="h-5 w-5 opacity-90" />
-                  <span className="text-2xl font-semibold opacity-95">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 opacity-90" />
+                  <span className="text-xl sm:text-2xl font-semibold opacity-95">
                     <AnimatedCounter end={parseFloat(dollarValue)} duration={2000} decimals={2} />
                   </span>
                 </div>
@@ -230,8 +230,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-4 border-t border-white/20">
-              <Users className="h-4 w-4 opacity-90" />
+            <div className="flex items-center gap-2 pt-3 sm:pt-4 border-t border-white/20">
+              <Users className="h-4 w-4 opacity-90 flex-shrink-0" />
               <p className="text-sm opacity-90 font-medium">
                 50% of credits support household women
               </p>
@@ -240,33 +240,33 @@ export default function Dashboard() {
         </Card>
 
         {/* Impact Visualization Chart */}
-        <Card className="p-6 mb-6">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Credit Accumulation Over Time
+        <Card className="p-4 sm:p-6 shadow-card">
+          <h3 className="font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-base">
+            <TrendingUp className="h-5 w-5 text-primary flex-shrink-0" />
+            <span className="truncate">Credit Accumulation</span>
           </h3>
-          <div className="h-64">
+          <div className="h-48 sm:h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+              <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                 <XAxis 
                   dataKey="date" 
                   stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickMargin={10}
+                  fontSize={11}
+                  tickMargin={8}
                 />
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickMargin={10}
-                  label={{ value: 'Credits', angle: -90, position: 'insideLeft' }}
+                  fontSize={11}
+                  tickMargin={8}
                 />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
-                    borderRadius: "0.5rem",
-                    padding: "8px 12px"
+                    borderRadius: "var(--radius-card)",
+                    padding: "8px 12px",
+                    fontSize: "14px"
                   }}
                   labelStyle={{ fontWeight: 600, marginBottom: 4 }}
                 />
@@ -274,9 +274,9 @@ export default function Dashboard() {
                   type="monotone" 
                   dataKey="credits" 
                   stroke="hsl(var(--success))" 
-                  strokeWidth={3}
-                  dot={{ fill: "hsl(var(--success))", strokeWidth: 2, r: 5 }}
-                  activeDot={{ r: 7, strokeWidth: 0 }}
+                  strokeWidth={2}
+                  dot={{ fill: "hsl(var(--success))", strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
                   animationDuration={1500}
                 />
               </LineChart>
@@ -285,73 +285,73 @@ export default function Dashboard() {
         </Card>
 
         {/* 2x2 Metric Cards Grid */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <Card className="p-5 bg-gradient-to-br from-success/10 to-success/5 border-success/20 hover:shadow-lg transition-shadow">
-            <div className="flex items-start justify-between mb-3">
-              <div className="p-2.5 rounded-lg bg-success/10">
-                <Globe className="h-6 w-6 text-success" />
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <Card className="p-4 sm:p-5 bg-gradient-to-br from-success/10 to-success/5 border-success/20 hover:shadow-card-hover transition-base">
+            <div className="flex items-start justify-between mb-2 sm:mb-3">
+              <div className="p-2 sm:p-2.5 rounded-button bg-success/10">
+                <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-success" />
               </div>
-              <span className="text-3xl">🌍</span>
+              <span className="text-2xl sm:text-3xl">🌍</span>
             </div>
-            <p className="text-3xl font-bold text-foreground mb-1">
+            <p className="text-2xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">
               <AnimatedCounter end={1.2} decimals={1} suffix="t" />
             </p>
-            <p className="text-sm text-muted-foreground">CO₂ Prevented</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">CO₂ Prevented</p>
           </Card>
 
-          <Card className="p-5 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-lg transition-shadow">
-            <div className="flex items-start justify-between mb-3">
-              <div className="p-2.5 rounded-lg bg-primary/10">
-                <ImageIcon className="h-6 w-6 text-primary" />
+          <Card className="p-4 sm:p-5 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-card-hover transition-base">
+            <div className="flex items-start justify-between mb-2 sm:mb-3">
+              <div className="p-2 sm:p-2.5 rounded-button bg-primary/10">
+                <ImageIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
-              <span className="text-3xl">📸</span>
+              <span className="text-2xl sm:text-3xl">📸</span>
             </div>
-            <p className="text-3xl font-bold text-foreground mb-1">
+            <p className="text-2xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">
               <AnimatedCounter end={18} />
             </p>
-            <p className="text-sm text-muted-foreground">Total Submissions</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Submissions</p>
           </Card>
 
-          <Card className="p-5 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 hover:shadow-lg transition-shadow">
-            <div className="flex items-start justify-between mb-3">
-              <div className="p-2.5 rounded-lg bg-accent/10">
-                <Zap className="h-6 w-6 text-accent" />
+          <Card className="p-4 sm:p-5 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 hover:shadow-card-hover transition-base">
+            <div className="flex items-start justify-between mb-2 sm:mb-3">
+              <div className="p-2 sm:p-2.5 rounded-button bg-accent/10">
+                <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-accent" />
               </div>
-              <span className="text-3xl">⚡</span>
+              <span className="text-2xl sm:text-3xl">⚡</span>
             </div>
-            <p className="text-3xl font-bold text-foreground mb-1">
+            <p className="text-2xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">
               <AnimatedCounter end={25} suffix="+" />
             </p>
-            <p className="text-sm text-muted-foreground">This Week Credits</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">This Week</p>
           </Card>
 
-          <Card className="p-5 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20 hover:shadow-lg transition-shadow">
-            <div className="flex items-start justify-between mb-3">
-              <div className="p-2.5 rounded-lg bg-emerald-500/10">
-                <TreePine className="h-6 w-6 text-emerald-500" />
+          <Card className="p-4 sm:p-5 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20 hover:shadow-card-hover transition-base">
+            <div className="flex items-start justify-between mb-2 sm:mb-3">
+              <div className="p-2 sm:p-2.5 rounded-button bg-emerald-500/10">
+                <TreePine className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-500" />
               </div>
-              <span className="text-3xl">🌳</span>
+              <span className="text-2xl sm:text-3xl">🌳</span>
             </div>
-            <p className="text-3xl font-bold text-foreground mb-1">
+            <p className="text-2xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">
               <AnimatedCounter end={63} />
             </p>
-            <p className="text-sm text-muted-foreground">Trees Equivalent</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Trees</p>
           </Card>
         </div>
 
         {/* Achievements - Horizontal Scroll */}
-        <div className="mb-6">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <Award className="h-5 w-5 text-primary" />
+        <div>
+          <h3 className="font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-base">
+            <Award className="h-5 w-5 text-primary flex-shrink-0" />
             Your Achievements
           </h3>
           
-          <ScrollArea className="w-full whitespace-nowrap rounded-lg">
-            <div className="flex gap-4 pb-4">
+          <ScrollArea className="w-full whitespace-nowrap rounded-card">
+            <div className="flex gap-3 sm:gap-4 pb-4">
               {achievementsData.map((achievement) => (
                 <Card 
                   key={achievement.id}
-                  className={`inline-block w-40 flex-shrink-0 p-4 cursor-pointer transition-all hover:shadow-lg ${
+                  className={`inline-block w-36 sm:w-40 flex-shrink-0 p-3 sm:p-4 cursor-pointer transition-base hover:shadow-card-hover min-h-[48px] ${
                     achievement.unlocked 
                       ? 'bg-gradient-to-br from-primary/10 to-success/10 border-primary/20' 
                       : 'bg-muted/30 grayscale opacity-60'
@@ -363,20 +363,20 @@ export default function Dashboard() {
                     }
                   }}
                 >
-                  <div className="text-center space-y-2">
-                    <div className="text-4xl mb-2">{achievement.icon}</div>
-                    <p className="font-semibold text-sm leading-tight text-foreground">
+                  <div className="text-center space-y-1.5 sm:space-y-2">
+                    <div className="text-3xl sm:text-4xl mb-1 sm:mb-2">{achievement.icon}</div>
+                    <p className="font-semibold text-xs sm:text-sm leading-tight text-foreground">
                       {achievement.name}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[11px] sm:text-xs text-muted-foreground">
                       {achievement.unlocked ? `+${achievement.creditsReward} credits` : 'Locked'}
                     </p>
-                    <div className="pt-2">
+                    <div className="pt-1.5 sm:pt-2">
                       <Progress 
                         value={(achievement.currentProgress / achievement.requirement) * 100} 
                         className="h-1.5"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">
                         {achievement.currentProgress}/{achievement.requirement}
                       </p>
                     </div>
@@ -399,14 +399,14 @@ export default function Dashboard() {
         </div>
 
         {/* Carbon Credit Transparency Section */}
-        <div className="mb-6">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <Coins className="h-5 w-5 text-primary" />
+        <div>
+          <h3 className="font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-base">
+            <Coins className="h-5 w-5 text-primary flex-shrink-0" />
             Carbon Credit Transparency
           </h3>
           
           {/* Credit Wallet and Distribution */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
             <CreditWalletCard
               availableCredits={availableCredits}
               pendingCredits={pendingCredits}

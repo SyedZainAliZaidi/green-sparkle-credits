@@ -14,8 +14,8 @@ export const BottomNav = () => {
   const { triggerLight } = useHaptic();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-t border-border pb-safe-bottom">
-      <div className="flex justify-around items-center h-16 max-w-screen-lg mx-auto px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
+      <div className="flex justify-around items-center h-16 max-w-screen-lg mx-auto px-2 pb-safe">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -23,11 +23,11 @@ export const BottomNav = () => {
               key={item.to}
               to={item.to}
               onClick={triggerLight}
-              className="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 min-w-[4rem] min-h-[44px] text-muted-foreground hover:text-foreground data-[active]:text-primary"
-              activeClassName="text-primary"
+              className="flex flex-col items-center justify-center gap-0.5 px-3 py-2 rounded-button transition-base min-w-[60px] min-h-[48px] text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-95 data-[active]:text-primary data-[active]:bg-primary/10"
+              activeClassName="text-primary bg-primary/10"
             >
-              <Icon className="h-5 w-5" />
-              <span className="text-xs font-medium">{item.label}</span>
+              <Icon className="h-5 w-5 flex-shrink-0" />
+              <span className="text-[11px] font-medium leading-tight">{item.label}</span>
             </NavLink>
           );
         })}

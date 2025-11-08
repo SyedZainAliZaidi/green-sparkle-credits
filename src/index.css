@@ -130,11 +130,21 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-size: 16px; /* Prevent zoom on mobile */
   }
 
   /* Ensure minimum touch target size */
   button, a, [role="button"] {
-    @apply min-h-[44px] min-w-[44px];
+    @apply min-h-[48px] min-w-[48px];
+  }
+
+  /* Safe area padding utilities */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 }
 

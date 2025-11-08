@@ -47,6 +47,24 @@ export function ImpactMap() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Helper function to get actual color from CSS variable
+    const getCSSColor = (variable: string): string => {
+      const style = getComputedStyle(document.documentElement);
+      const value = style.getPropertyValue(variable).trim();
+      // If it's HSL values, convert to hsl() format
+      if (value.includes(' ')) {
+        return `hsl(${value})`;
+      }
+      return value;
+    };
+
+    // Get colors from CSS variables
+    const primaryColor = getCSSColor('--primary');
+    const backgroundColor = getCSSColor('--background');
+    const mutedColor = getCSSColor('--muted');
+    const borderColor = getCSSColor('--border');
+    const destructiveColor = getCSSColor('--destructive');
+
     // Set canvas size
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * window.devicePixelRatio;
@@ -54,12 +72,12 @@ export function ImpactMap() {
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
     // Clear canvas
-    ctx.fillStyle = 'hsl(var(--muted))';
+    ctx.fillStyle = mutedColor;
     ctx.fillRect(0, 0, rect.width, rect.height);
 
     // Simple world map background (simplified continents)
-    ctx.fillStyle = 'hsl(var(--background))';
-    ctx.strokeStyle = 'hsl(var(--border))';
+    ctx.fillStyle = backgroundColor;
+    ctx.strokeStyle = borderColor;
     ctx.lineWidth = 1;
 
     // Convert lat/lng to canvas coordinates
@@ -69,6 +87,33 @@ export function ImpactMap() {
       return { x, y };
     };
 
+    // Helper to convert hsl() to rgba()
+    const hslToRgba = (hslColor: string, alpha: number): string => {
+      // Extract HSL values if in hsl() format
+      const match = hslColor.match(/hsl\(([^)]+)\)/);
+      if (!match) return `rgba(0, 0, 0, ${alpha})`;
+      
+      const [h, s, l] = match[1].split(/\s+/).map((v, i) => {
+        const val = parseFloat(v);
+        return i === 0 ? val : val / 100;
+      });
+
+      // Convert HSL to RGB
+      const c = (1 - Math.abs(2 * l - 1)) * s;
+      const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+      const m = l - c / 2;
+      
+      let r = 0, g = 0, b = 0;
+      if (h >= 0 && h < 60) { r = c; g = x; b = 0; }
+      else if (h >= 60 && h < 120) { r = x; g = c; b = 0; }
+      else if (h >= 120 && h < 180) { r = 0; g = c; b = x; }
+      else if (h >= 180 && h < 240) { r = 0; g = x; b = c; }
+      else if (h >= 240 && h < 300) { r = x; g = 0; b = c; }
+      else if (h >= 300 && h < 360) { r = c; g = 0; b = x; }
+
+      return `rgba(${Math.round((r + m) * 255)}, ${Math.round((g + m) * 255)}, ${Math.round((b + m) * 255)}, ${alpha})`;
+    };
+
     // Draw heat map circles for CO2 reduction
     markers.forEach(marker => {
       const pos = latLngToXY(marker.lat, marker.lng);
@@ -76,35 +121,35 @@ export function ImpactMap() {
 
       // Heat map gradient
       const gradient = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, radius);
-      gradient.addColorStop(0, 'hsla(var(--primary), 0.4)');
-      gradient.addColorStop(0.5, 'hsla(var(--primary), 0.2)');
-      gradient.addColorStop(1, 'hsla(var(--primary), 0)');
+      gradient.addColorStop(0, hslToRgba(primaryColor, 0.4));
+      gradient.addColorStop(0.5, hslToRgba(primaryColor, 0.2));
+      gradient.addColorStop(1, hslToRgba(primaryColor, 0));
 
       ctx.fillStyle = gradient;
       ctx.fillRect(pos.x - radius, pos.y - radius, radius * 2, radius * 2);
 
       // Draw marker pin
-      ctx.fillStyle = 'hsl(var(--primary))';
+      ctx.fillStyle = primaryColor;
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = 'hsl(var(--background))';
+      ctx.strokeStyle = backgroundColor;
       ctx.lineWidth = 2;
       ctx.stroke();
     });
 
     // Draw user location with special marker
     const userPos = latLngToXY(userLocation.lat, userLocation.lng);
-    ctx.fillStyle = 'hsl(var(--destructive))';
+    ctx.fillStyle = destructiveColor;
     ctx.beginPath();
     ctx.arc(userPos.x, userPos.y, 6, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = 'hsl(var(--background))';
+    ctx.strokeStyle = backgroundColor;
     ctx.lineWidth = 2;
     ctx.stroke();
 
     // Draw pulse ring around user location
-    ctx.strokeStyle = 'hsl(var(--destructive))';
+    ctx.strokeStyle = destructiveColor;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(userPos.x, userPos.y, 12, 0, Math.PI * 2);

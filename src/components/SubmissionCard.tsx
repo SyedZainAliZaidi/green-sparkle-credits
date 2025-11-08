@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Heart, MapPin, Coins, Clock, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSwipeable } from "react-swipeable";
+import { VerificationBadge } from "./VerificationBadge";
 
 interface SubmissionCardProps {
   id: number;
@@ -18,6 +19,8 @@ interface SubmissionCardProps {
   liked: boolean;
   timestamp: string;
   image: string;
+  verified?: boolean;
+  transactionHash?: string;
   onClick?: () => void;
   onLike?: (e: React.MouseEvent) => void;
   onUserClick?: (e: React.MouseEvent) => void;
@@ -34,6 +37,8 @@ export function SubmissionCard({
   liked,
   timestamp,
   image,
+  verified = false,
+  transactionHash,
   onClick,
   onLike,
   onUserClick,
@@ -61,6 +66,12 @@ export function SubmissionCard({
             alt={`${cookstoveType} by ${user}`}
             className="w-full h-full object-cover"
           />
+        )}
+        {/* Verification Badge Overlay */}
+        {verified && (
+          <div className="absolute top-2 right-2">
+            <VerificationBadge verified={verified} transactionHash={transactionHash} />
+          </div>
         )}
       </div>
 

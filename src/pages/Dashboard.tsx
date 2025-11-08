@@ -14,6 +14,9 @@ import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind, Camera, Gl
 import { SolarPotentialCard } from "@/components/SolarPotentialCard";
 import { AirQualityCard } from "@/components/AirQualityCard";
 import { ImpactMap } from "@/components/ImpactMap";
+import { CreditWalletCard } from "@/components/CreditWalletCard";
+import { DistributionTracker } from "@/components/DistributionTracker";
+import { CreditTransactionHistory } from "@/components/CreditTransactionHistory";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useNavigate } from "react-router-dom";
 import { achievementsData } from "@/data/achievements";
@@ -139,6 +142,63 @@ export default function Dashboard() {
     ],
     lastSubmission: new Date(2025, 10, 7),
   };
+
+  // Mock credit transaction data
+  const mockTransactions = [
+    {
+      id: "1",
+      action: "Clean cookstove verified",
+      credits_earned: 12,
+      transaction_hash: "0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385",
+      status: "confirmed" as const,
+      verified: true,
+      created_at: new Date(2025, 10, 7, 14, 30).toISOString(),
+    },
+    {
+      id: "2",
+      action: "Daily usage verification",
+      credits_earned: 8,
+      transaction_hash: "0x3c4e8b2f1d9a6c5e7f8b3c4e8b2f1d9a6c5e7f8b3c4e8b2f1d9a6c5e7f8b3c4e",
+      status: "confirmed" as const,
+      verified: true,
+      created_at: new Date(2025, 10, 6, 10, 15).toISOString(),
+    },
+    {
+      id: "3",
+      action: "Weekly impact milestone",
+      credits_earned: 15,
+      transaction_hash: "0x9b7c6d5e4f3a2b1c9d8e7f6a5b4c3d2e1f9a8b7c6d5e4f3a2b1c9d8e7f6a5b4c",
+      status: "pending" as const,
+      verified: false,
+      created_at: new Date(2025, 10, 5, 16, 45).toISOString(),
+    },
+    {
+      id: "4",
+      action: "First submission bonus",
+      credits_earned: 20,
+      transaction_hash: "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+      status: "confirmed" as const,
+      verified: true,
+      created_at: new Date(2025, 10, 1, 9, 0).toISOString(),
+    },
+  ];
+
+  // Mock earning history for wallet chart
+  const earningHistory = [
+    { date: "Nov 1", credits: 20 },
+    { date: "Nov 2", credits: 28 },
+    { date: "Nov 3", credits: 36 },
+    { date: "Nov 4", credits: 44 },
+    { date: "Nov 5", credits: 59 },
+    { date: "Nov 6", credits: 67 },
+    { date: "Nov 7", credits: 79 },
+  ];
+
+  const availableCredits = 64; // confirmed credits
+  const pendingCredits = 15; // pending credits
+  const userPortionCredits = 122; // 50% of total earned
+  const communityPortionCredits = 123; // 50% to community
+  const womenBenefited = 18;
 
   return (
     <div className="min-h-screen pb-20 bg-background">
@@ -336,6 +396,31 @@ export default function Dashboard() {
         {/* Leaderboard */}
         <div className="mb-6">
           <Leaderboard entries={leaderboardData} currentUserRank={4} />
+        </div>
+
+        {/* Carbon Credit Transparency Section */}
+        <div className="mb-6">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <Coins className="h-5 w-5 text-primary" />
+            Carbon Credit Transparency
+          </h3>
+          
+          {/* Credit Wallet and Distribution */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <CreditWalletCard
+              availableCredits={availableCredits}
+              pendingCredits={pendingCredits}
+              earningHistory={earningHistory}
+            />
+            <DistributionTracker
+              userCredits={userPortionCredits}
+              communityCredits={communityPortionCredits}
+              womenBenefited={womenBenefited}
+            />
+          </div>
+
+          {/* Transaction History */}
+          <CreditTransactionHistory transactions={mockTransactions} />
         </div>
 
         {/* Climate Data Visualizations */}

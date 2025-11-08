@@ -404,33 +404,25 @@ export default function Community() {
 
         {/* Submissions Grid - Responsive 3/2/1 columns */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
-          {submissions.map((submission) => {
-            const swipeHandlers = useSwipeable({
-              onSwipedLeft: () => handleLike(submission.id),
-              trackMouse: false,
-            });
-            
-            return (
-              <div key={submission.id} {...swipeHandlers}>
-                <SubmissionCard
-                  id={submission.id}
-                  user={submission.user}
-                  avatar={submission.avatar}
-                  location={submission.location}
-                  cookstoveType={submission.cookstoveType}
-                  credits={submission.credits}
-                  co2Prevented={submission.co2Prevented}
-                  likes={submission.likes}
-                  liked={submission.liked}
-                  timestamp={submission.timestamp}
-                  image={submission.image}
-                  onClick={() => handleSubmissionClick(submission)}
-                  onLike={() => handleLike(submission.id)}
-                  onUserClick={() => handleUserClick(submission.user)}
-                />
-              </div>
-            );
-          })}
+          {submissions.map((submission) => (
+            <SubmissionCard
+              key={submission.id}
+              id={submission.id}
+              user={submission.user}
+              avatar={submission.avatar}
+              location={submission.location}
+              cookstoveType={submission.cookstoveType}
+              credits={submission.credits}
+              co2Prevented={submission.co2Prevented}
+              likes={submission.likes}
+              liked={submission.liked}
+              timestamp={submission.timestamp}
+              image={submission.image}
+              onClick={() => handleSubmissionClick(submission)}
+              onLike={() => handleLike(submission.id)}
+              onUserClick={() => handleUserClick(submission.user)}
+            />
+          ))}
         </div>
 
         {/* Load More */}

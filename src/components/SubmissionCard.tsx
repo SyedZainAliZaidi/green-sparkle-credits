@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Heart, MapPin, Coins, Clock, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSwipeable } from "react-swipeable";
 
 interface SubmissionCardProps {
   id: number;
@@ -37,8 +38,17 @@ export function SubmissionCard({
   onLike,
   onUserClick,
 }: SubmissionCardProps) {
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: (e) => {
+      e.event.stopPropagation();
+      onLike?.(e.event as any);
+    },
+    trackMouse: false,
+  });
+
   return (
     <Card 
+      {...swipeHandlers}
       className="w-full max-w-[280px] overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl group"
       onClick={onClick}
     >

@@ -99,8 +99,20 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {recentSubmissions.map((submission) => (
-              <Card key={submission.id} onClick={triggerLight} className="overflow-hidden hover:shadow-card-hover transition-base cursor-pointer min-h-[48px]">
+              <Card 
+                key={submission.id} 
+                onClick={triggerLight} 
+                className="overflow-hidden hover:shadow-card-hover transition-base cursor-pointer min-h-[48px]"
+                role="article"
+                aria-label={`Verification by ${submission.user} from ${submission.location}, earned ${submission.credits} credits`}
+              >
                 <div className="aspect-square bg-muted relative">
+                  <img 
+                    src={submission.image} 
+                    alt={`Clean cookstove verification by ${submission.user} in ${submission.location}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className="absolute bottom-2 left-2 right-2">
                     <p className="text-white text-xs font-medium truncate">{submission.user}</p>

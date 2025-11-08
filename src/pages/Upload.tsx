@@ -183,8 +183,9 @@ export default function Upload() {
             size="sm"
             onClick={handleVoiceGuidance}
             className="w-full gap-2"
+            aria-label="Listen to voice guidance for taking cookstove photo"
           >
-            <Volume2 className="h-4 w-4" />
+            <Volume2 className="h-4 w-4" aria-hidden="true" />
             Hear Instructions
           </Button>
         </Card>
@@ -199,9 +200,10 @@ export default function Upload() {
                     triggerLight();
                     setShowCamera(true);
                   }}
-                  className="relative w-[100px] h-[100px] rounded-full bg-gradient-to-br from-primary to-success text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-pulse-soft mb-6 group"
+                  className="relative w-[100px] h-[100px] rounded-full bg-gradient-to-br from-primary to-success text-white shadow-card hover:shadow-card-hover transition-base hover:scale-105 animate-pulse-soft mb-6 group"
+                  aria-label="Open camera to capture cookstove photo"
                 >
-                  <Camera className="h-12 w-12 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" />
+                  <Camera className="h-12 w-12 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" aria-hidden="true" />
                   <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
                 <h3 className="text-lg font-semibold mb-2">Ready to Capture</h3>
@@ -215,8 +217,9 @@ export default function Upload() {
                 <div className="relative rounded-lg overflow-hidden">
                   <img
                     src={image}
-                    alt="Captured cookstove"
+                    alt="Captured clean cookstove ready for verification"
                     className="w-full h-auto"
+                    loading="eager"
                   />
                   <div className="absolute top-2 right-2">
                     <div className="px-3 py-1 rounded-full bg-success text-success-foreground text-sm font-medium flex items-center gap-1">

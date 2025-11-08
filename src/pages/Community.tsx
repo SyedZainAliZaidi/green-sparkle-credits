@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
+import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { Heart, MapPin, Coins, Clock, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface Submission {
   id: number;
@@ -21,6 +23,7 @@ interface Submission {
 export default function Community() {
   const navigate = useNavigate();
   const [hasSubmissions] = useState(true); // Set to false to see empty state
+  const [isLoading, setIsLoading] = useState(true);
   const [submissions, setSubmissions] = useState<Submission[]>([
     {
       id: 1,
@@ -90,13 +93,29 @@ export default function Community() {
     },
   ]);
 
+  useEffect(() => {
+    // Simulate data loading
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleLike = (id: number) => {
     setSubmissions(subs =>
-      subs.map(sub =>
-        sub.id === id
-          ? { ...sub, liked: !sub.liked, likes: sub.liked ? sub.likes - 1 : sub.likes + 1 }
-          : sub
-      )
+      subs.map(sub => {
+        if (sub.id === id) {
+          const wasLiked = sub.liked;
+          const newLiked = !sub.liked;
+          
+          if (newLiked) {
+            toast.success("Liked! ❤️");
+          }
+          
+          return { ...sub, liked: newLiked, likes: wasLiked ? sub.likes - 1 : sub.likes + 1 };
+        }
+        return sub;
+      })
     );
   };
 
@@ -132,6 +151,40 @@ export default function Community() {
           <h1 className="text-2xl font-bold text-foreground mb-2">Community Impact</h1>
           <p className="text-muted-foreground">See what others are achieving</p>
         </div>
+
+        {isLoading ? (
+          <>
+            {/* Skeleton Collective Impact Banner */}
+            <Card className="p-6 mb-6 animate-pulse">
+              <div className="h-5 w-48 bg-muted rounded mb-4 mx-auto" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center space-y-2">
+                  <div className="h-8 w-16 bg-muted rounded mx-auto" />
+                  <div className="h-3 w-24 bg-muted rounded mx-auto" />
+                </div>
+                <div className="text-center space-y-2">
+                  <div className="h-8 w-16 bg-muted rounded mx-auto" />
+                  <div className="h-3 w-24 bg-muted rounded mx-auto" />
+                </div>
+              </div>
+            </Card>
+
+            {/* Skeleton Filter Options */}
+            <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+              {Array(4).fill(0).map((_, i) => (
+                <div key={i} className="h-8 w-20 bg-muted rounded animate-pulse" />
+              ))}
+            </div>
+
+            {/* Skeleton Submissions Grid */}
+            <div className="grid gap-4">
+              {Array(6).fill(0).map((_, i) => (
+                <SkeletonLoader key={i} />
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
 
         {/* Collective Impact Banner */}
         <Card className="p-6 mb-6 bg-gradient-to-br from-primary via-primary to-success text-primary-foreground">
@@ -221,6 +274,8 @@ export default function Community() {
             Load More
           </Button>
         </div>
+        </>
+        )}
       </div>
     </div>
   );

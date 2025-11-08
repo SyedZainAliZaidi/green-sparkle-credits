@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { CheckCircle, Leaf, Heart, Share2, TrendingUp, Award } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import confetti from "canvas-confetti";
+import { toast } from "sonner";
 
 export default function Results() {
   const navigate = useNavigate();
@@ -13,6 +14,13 @@ export default function Results() {
 
   useEffect(() => {
     setShowConfetti(true);
+    
+    // Show achievement toast
+    setTimeout(() => {
+      toast.success("Achievement unlocked! 🏆", {
+        description: "Carbon Credit Earner - Level 1",
+      });
+    }, 1000);
     
     // Trigger confetti animation
     const duration = 3000;

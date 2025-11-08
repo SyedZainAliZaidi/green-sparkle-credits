@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/StatCard";
 import { EmptyState } from "@/components/EmptyState";
+import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind, Camera } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +10,16 @@ import { useNavigate } from "react-router-dom";
 export default function Dashboard() {
   const navigate = useNavigate();
   const [hasData] = useState(true); // Set to false to see empty state
+  const [isLoading, setIsLoading] = useState(true);
   
+  useEffect(() => {
+    // Simulate data loading
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
   if (!hasData) {
     return (
       <div className="min-h-screen pb-20 bg-background animate-fade-in">
@@ -26,6 +36,37 @@ export default function Dashboard() {
             actionLabel="Take Photo"
             onAction={() => navigate("/upload")}
           />
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pb-20 bg-background">
+        <div className="px-4 py-6 max-w-screen-lg mx-auto">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Your Impact Dashboard</h1>
+            <p className="text-muted-foreground">Track your earnings and environmental impact</p>
+          </div>
+          
+          {/* Skeleton Stats Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            <SkeletonLoader type="stat" />
+            <SkeletonLoader type="stat" />
+            <SkeletonLoader type="stat" />
+            <SkeletonLoader type="stat" />
+          </div>
+
+          {/* Skeleton Chart */}
+          <SkeletonLoader type="chart" className="mb-6" />
+
+          {/* Skeleton Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <SkeletonLoader type="stat" />
+            <SkeletonLoader type="stat" />
+            <SkeletonLoader type="stat" />
+          </div>
         </div>
       </div>
     );

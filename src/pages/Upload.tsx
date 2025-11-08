@@ -1,13 +1,28 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Camera, Volume2, CheckCircle, Info } from "lucide-react";
+import { Camera, Volume2, CheckCircle, Info, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Progress } from "@/components/ui/progress";
 
 export default function Upload() {
   const [image, setImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState<"upload" | "analyze" | "calculate" | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -17,28 +32,82 @@ export default function Upload() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImage(reader.result as string);
+        toast.success("Photo captured successfully! ✓");
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleVerify = async () => {
+  const initiateVerification = () => {
     if (!image) {
       toast.error("Please capture an image first");
-      // Trigger shake animation on error
       const button = document.getElementById("verify-button");
       button?.classList.add("animate-shake");
       setTimeout(() => button?.classList.remove("animate-shake"), 500);
       return;
     }
+    setShowConfirmDialog(true);
+  };
 
+  const handleVerify = async () => {
+    setShowConfirmDialog(false);
     setIsUploading(true);
-    
-    // Simulate AI verification
-    setTimeout(() => {
+    setUploadError(null);
+    setUploadProgress(0);
+
+    try {
+      // Stage 1: Uploading image
+      setUploadStage("upload");
+      toast.info("Uploading image...", { id: "upload-status" });
+      await simulateProgress(0, 33, 800);
+
+      // Stage 2: AI Analysis
+      setUploadStage("analyze");
+      toast.info("Analyzing with AI...", { id: "upload-status" });
+      await simulateProgress(33, 66, 1000);
+
+      // Stage 3: Calculating impact
+      setUploadStage("calculate");
+      toast.info("Calculating impact...", { id: "upload-status" });
+      await simulateProgress(66, 100, 700);
+
+      // Success
+      toast.success("Analysis complete! 💰", { id: "upload-status" });
+      setTimeout(() => {
+        toast.success("Credits added to your account! 💰");
+        navigate("/results", { state: { image } });
+      }, 500);
+    } catch (error) {
+      setUploadError("Upload failed. Please try again.");
+      toast.error("Upload failed. Please try again.", { id: "upload-status" });
+    } finally {
       setIsUploading(false);
-      navigate("/results", { state: { image } });
-    }, 2000);
+      setUploadStage(null);
+    }
+  };
+
+  const simulateProgress = (start: number, end: number, duration: number) => {
+    return new Promise((resolve) => {
+      const steps = 20;
+      const increment = (end - start) / steps;
+      const stepDuration = duration / steps;
+      let current = start;
+
+      const interval = setInterval(() => {
+        current += increment;
+        setUploadProgress(Math.min(current, end));
+        
+        if (current >= end) {
+          clearInterval(interval);
+          resolve(true);
+        }
+      }, stepDuration);
+    });
+  };
+
+  const handleRetry = () => {
+    setUploadError(null);
+    handleVerify();
   };
 
   const handleVoiceGuidance = () => {
@@ -129,24 +198,74 @@ export default function Upload() {
                     </div>
                   </div>
                 </div>
+                {/* Loading State */}
+                {isUploading && (
+                  <Card className="p-6 bg-muted/50 animate-fade-in">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-center gap-3">
+                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        <span className="text-sm font-medium">
+                          {uploadStage === "upload" && "Uploading image..."}
+                          {uploadStage === "analyze" && (
+                            <span className="flex items-center gap-1">
+                              Analyzing with AI
+                              <span className="inline-flex gap-0.5">
+                                <span className="animate-bounce" style={{ animationDelay: "0ms" }}>.</span>
+                                <span className="animate-bounce" style={{ animationDelay: "150ms" }}>.</span>
+                                <span className="animate-bounce" style={{ animationDelay: "300ms" }}>.</span>
+                              </span>
+                            </span>
+                          )}
+                          {uploadStage === "calculate" && "Calculating impact..."}
+                        </span>
+                      </div>
+                      <Progress value={uploadProgress} className="h-2" />
+                      <p className="text-xs text-center text-muted-foreground">
+                        {Math.round(uploadProgress)}% complete
+                      </p>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Error State */}
+                {uploadError && (
+                  <Card className="p-4 bg-destructive/10 border-destructive/20 animate-shake">
+                    <div className="space-y-3">
+                      <p className="text-sm text-destructive font-medium">{uploadError}</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRetry}
+                        className="w-full"
+                      >
+                        Try Again
+                      </Button>
+                    </div>
+                  </Card>
+                )}
+
                 <div className="flex gap-3">
                   <Button
                     variant="outline"
-                    onClick={() => setImage(null)}
+                    onClick={() => {
+                      setImage(null);
+                      setUploadError(null);
+                    }}
                     className="flex-1"
+                    disabled={isUploading}
                   >
                     Retake
                   </Button>
                   <Button
                     id="verify-button"
-                    onClick={handleVerify}
+                    onClick={initiateVerification}
                     disabled={isUploading}
                     className="flex-1 gap-2"
                   >
                     {isUploading ? (
                       <>
-                        <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                        Verifying...
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Processing...
                       </>
                     ) : (
                       "Verify Cookstove"
@@ -181,6 +300,24 @@ export default function Upload() {
           </ul>
         </Card>
       </div>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ready to submit?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your photo will be analyzed by AI to verify it's a clean cookstove and calculate your carbon credits. This usually takes a few seconds.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleVerify}>
+              Yes, Submit Photo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

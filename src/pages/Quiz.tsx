@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Volume2, CheckCircle, XCircle, Award } from "lucide-react";
+import { Volume2, CheckCircle, XCircle, Award, Clock, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { useHaptic } from "@/hooks/useHaptic";
+import { CookstoveComparison } from "@/components/CookstoveComparison";
 
 interface Question {
   id: number;
@@ -68,34 +70,86 @@ export default function Quiz() {
   const [showExplanation, setShowExplanation] = useState(false);
   const [score, setScore] = useState(0);
   const [quizComplete, setQuizComplete] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [timerActive, setTimerActive] = useState(true);
   const navigate = useNavigate();
+  const haptic = useHaptic();
+
+  // Timer countdown
+  useEffect(() => {
+    if (!timerActive || showExplanation) return;
+    
+    if (timeLeft <= 0) {
+      // Auto-submit wrong answer when time runs out
+      handleAnswerSelect(-1);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, timerActive, showExplanation]);
 
   const handleAnswerSelect = (answerIndex: number) => {
     if (showExplanation) return;
     
     setSelectedAnswer(answerIndex);
     setShowExplanation(true);
+    setTimerActive(false);
     
-    if (answerIndex === questions[currentQuestion].correctAnswer) {
+    const isCorrect = answerIndex === questions[currentQuestion].correctAnswer;
+    
+    if (isCorrect) {
       setScore(score + 1);
+      haptic.triggerSuccess();
+    } else {
+      haptic.triggerError();
     }
   };
 
   const handleNext = () => {
+    haptic.triggerLight();
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedAnswer(null);
       setShowExplanation(false);
+      setTimeLeft(30);
+      setTimerActive(true);
     } else {
       setQuizComplete(true);
     }
   };
 
   const handleVoiceQuestion = () => {
-    toast.info(`🔊 ${questions[currentQuestion].question}`);
+    haptic.triggerLight();
+    const utterance = new SpeechSynthesisUtterance(questions[currentQuestion].question);
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    window.speechSynthesis.cancel(); // Stop any ongoing speech
+    window.speechSynthesis.speak(utterance);
+    toast.info("🔊 Reading question aloud");
+  };
+
+  const handleShare = () => {
+    haptic.triggerLight();
+    const percentage = Math.round((score / questions.length) * 100);
+    const shareText = `I scored ${percentage}% on the Climate Quiz and earned ${creditsEarned} credits! 🌍💚`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: "EcoCredit Quiz Results",
+        text: shareText,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareText);
+      toast.success("Score copied to clipboard!");
+    }
   };
 
   const creditsEarned = score * 2;
+  const percentage = Math.round((score / questions.length) * 100);
 
   if (quizComplete) {
     return (
@@ -117,46 +171,83 @@ export default function Quiz() {
             <div className="space-y-2 mb-6">
               <p className="text-sm font-medium opacity-90">Your Score</p>
               <p className="text-6xl font-bold">{score}/{questions.length}</p>
+              <p className="text-2xl font-semibold opacity-95">{percentage}%</p>
               <p className="text-sm opacity-90">
                 {score === questions.length
-                  ? "Perfect Score!"
+                  ? "Perfect Score! 🏆"
                   : score >= 4
-                  ? "Excellent!"
+                  ? "Excellent! 🌟"
                   : score >= 3
-                  ? "Good Job!"
-                  : "Keep Learning!"}
+                  ? "Good Job! 👍"
+                  : "Keep Learning! 📚"}
               </p>
             </div>
             
-            <div className="pt-6 border-t border-primary-foreground/20">
-              <p className="text-sm font-medium opacity-90 mb-2">Bonus Credits Earned</p>
-              <p className="text-4xl font-bold">{creditsEarned}</p>
+            <div className="pt-6 border-t border-primary-foreground/20 space-y-2">
+              <p className="text-sm font-medium opacity-90">Credits Breakdown</p>
+              <div className="space-y-1 text-sm opacity-90">
+                <div className="flex justify-between">
+                  <span>Correct Answers ({score})</span>
+                  <span>+{score * 2} credits</span>
+                </div>
+                {score === questions.length && (
+                  <div className="flex justify-between font-semibold">
+                    <span>Perfect Score Bonus</span>
+                    <span>+5 credits</span>
+                  </div>
+                )}
+              </div>
+              <div className="pt-3 border-t border-primary-foreground/20">
+                <p className="text-4xl font-bold">
+                  {score === questions.length ? creditsEarned + 5 : creditsEarned}
+                </p>
+                <p className="text-xs opacity-75">Total Credits Earned</p>
+              </div>
             </div>
           </Card>
+
+          <div className="mb-6">
+            <CookstoveComparison />
+          </div>
 
           <div className="space-y-3">
             <Button
               size="lg"
-              onClick={() => navigate("/dashboard")}
+              onClick={handleShare}
               className="w-full gap-2 h-14"
+              variant="secondary"
             >
-              View Dashboard
+              <Share2 className="h-5 w-5" />
+              Share Your Score
             </Button>
-            
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => {
-                setCurrentQuestion(0);
-                setSelectedAnswer(null);
-                setShowExplanation(false);
-                setScore(0);
-                setQuizComplete(false);
-              }}
-              className="w-full h-12"
-            >
-              Retake Quiz
-            </Button>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                size="lg"
+                onClick={() => navigate("/dashboard")}
+                className="gap-2 h-12"
+              >
+                Dashboard
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                  haptic.triggerLight();
+                  setCurrentQuestion(0);
+                  setSelectedAnswer(null);
+                  setShowExplanation(false);
+                  setScore(0);
+                  setQuizComplete(false);
+                  setTimeLeft(30);
+                  setTimerActive(true);
+                }}
+                className="h-12"
+              >
+                Retake Quiz
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -170,10 +261,21 @@ export default function Quiz() {
       <div className="px-4 py-6 max-w-screen-lg mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-3">
             <h1 className="text-2xl font-bold text-foreground">Climate Quiz</h1>
+            <div className="flex items-center gap-2">
+              <Clock className={`h-4 w-4 ${timeLeft <= 5 ? 'text-destructive animate-pulse' : 'text-muted-foreground'}`} />
+              <span className={`text-sm font-medium ${timeLeft <= 5 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                {timeLeft}s
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-muted-foreground">
               Question {currentQuestion + 1} of {questions.length}
+            </span>
+            <span className="text-sm font-medium text-primary">
+              {score * 2} credits
             </span>
           </div>
           <div className="relative h-2 bg-muted rounded-full overflow-hidden">
@@ -261,6 +363,22 @@ export default function Quiz() {
             {currentQuestion < questions.length - 1 ? "Next Question" : "See Results"}
           </Button>
         )}
+
+        {/* Progress Dots */}
+        <div className="flex justify-center gap-2 mt-6">
+          {questions.map((_, index) => (
+            <div
+              key={index}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                index < currentQuestion
+                  ? 'w-8 bg-success'
+                  : index === currentQuestion
+                  ? 'w-10 bg-primary'
+                  : 'w-2 bg-muted'
+              }`}
+            />
+          ))}
+        </div>
 
         {/* Credits Info */}
         <Card className="p-4 mt-6 bg-gradient-to-r from-accent/10 to-primary/10 border-accent/20">

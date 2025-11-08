@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle, Leaf, Heart, Share2, TrendingUp, Award } from "lucide-react";
+import { CheckCircle, Leaf, Heart, Share2, TrendingUp, Award, Car, Lightbulb, Home as HomeIcon } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
+import { AnimatedCounter } from "@/components/AnimatedCounter";
+import { EducationalFactsCarousel } from "@/components/EducationalFactsCarousel";
 
 export default function Results() {
   const navigate = useNavigate();
@@ -61,6 +63,9 @@ export default function Results() {
   const creditsEarned = 25;
   const co2Prevented = 0.15; // tons
   const treesEquivalent = 8;
+  const milesNotDriven = 370; // miles
+  const kwhSaved = 425; // kWh
+  const homesPowered = 0.2; // homes for a month
 
   return (
     <div className="min-h-screen pb-20 bg-background relative overflow-hidden animate-fade-in">
@@ -88,34 +93,54 @@ export default function Results() {
           </div>
         </Card>
 
-        {/* Impact Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <Card className="p-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-success/10">
-                <Leaf className="h-5 w-5 text-success" />
+        {/* Impact Equivalency Visualizations */}
+        <Card className="p-6 mb-6 bg-gradient-to-br from-success/5 to-primary/5 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+          <h3 className="text-lg font-semibold text-foreground mb-4 text-center">
+            Your Environmental Impact
+          </h3>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center p-4 rounded-lg bg-background">
+              <div className="inline-flex p-3 rounded-full bg-success/10 mb-2">
+                <Leaf className="h-6 w-6 text-success" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">CO₂ Prevented</p>
-                <p className="text-xl font-bold">{co2Prevented}t</p>
-                <p className="text-xs text-success">This month</p>
-              </div>
+              <p className="text-2xl font-bold text-foreground">
+                <AnimatedCounter end={treesEquivalent} />
+              </p>
+              <p className="text-xs text-muted-foreground">Trees Planted</p>
             </div>
-          </Card>
 
-          <Card className="p-4 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <TrendingUp className="h-5 w-5 text-primary" />
+            <div className="text-center p-4 rounded-lg bg-background">
+              <div className="inline-flex p-3 rounded-full bg-primary/10 mb-2">
+                <Car className="h-6 w-6 text-primary" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Trees Saved</p>
-                <p className="text-xl font-bold">{treesEquivalent}</p>
-                <p className="text-xs text-primary">Equivalent</p>
-              </div>
+              <p className="text-2xl font-bold text-foreground">
+                <AnimatedCounter end={milesNotDriven} />
+              </p>
+              <p className="text-xs text-muted-foreground">Miles Not Driven</p>
             </div>
-          </Card>
-        </div>
+
+            <div className="text-center p-4 rounded-lg bg-background">
+              <div className="inline-flex p-3 rounded-full bg-accent/10 mb-2">
+                <Lightbulb className="h-6 w-6 text-accent" />
+              </div>
+              <p className="text-2xl font-bold text-foreground">
+                <AnimatedCounter end={kwhSaved} />
+              </p>
+              <p className="text-xs text-muted-foreground">kWh Saved</p>
+            </div>
+
+            <div className="text-center p-4 rounded-lg bg-background">
+              <div className="inline-flex p-3 rounded-full bg-secondary/10 mb-2">
+                <HomeIcon className="h-6 w-6 text-secondary-foreground" />
+              </div>
+              <p className="text-2xl font-bold text-foreground">
+                <AnimatedCounter end={homesPowered} decimals={1} />
+              </p>
+              <p className="text-xs text-muted-foreground">Homes Powered</p>
+            </div>
+          </div>
+        </Card>
 
         {/* Health Benefits */}
         <Card className="p-6 mb-6 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 animate-fade-in" style={{ animationDelay: "0.3s" }}>
@@ -201,15 +226,10 @@ export default function Results() {
           </div>
         </div>
 
-        {/* Fun Fact */}
-        <Card className="p-4 mt-6 bg-muted/50 animate-fade-in" style={{ animationDelay: "0.5s" }}>
-          <p className="text-sm">
-            <span className="font-semibold text-primary">Did you know?</span>{" "}
-            <span className="text-muted-foreground">
-              Clean cookstoves reduce cooking time by 30%, giving you more time for other activities!
-            </span>
-          </p>
-        </Card>
+        {/* Educational Facts Carousel */}
+        <div className="mt-6 animate-fade-in" style={{ animationDelay: "0.5s" }}>
+          <EducationalFactsCarousel />
+        </div>
       </div>
     </div>
   );

@@ -23,10 +23,9 @@ export const BottomNav = () => {
               key={item.to}
               to={item.to}
               onClick={triggerLight}
-              className="flex flex-col items-center justify-center gap-0.5 px-3 py-2 rounded-button transition-base min-w-[60px] min-h-[48px] text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-95 data-[active]:text-primary data-[active]:bg-primary/10"
+              className="flex flex-col items-center justify-center gap-0.5 px-3 py-2 rounded-xl transition-base min-w-[60px] min-h-[48px] text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-95 data-[active]:text-primary data-[active]:bg-primary/10"
               activeClassName="text-primary bg-primary/10"
-              aria-label={item.label}
-              aria-current={undefined}
+              aria-label={`${item.label} navigation`}
             >
               <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
               <span className="text-[11px] font-medium leading-tight">{item.label}</span>

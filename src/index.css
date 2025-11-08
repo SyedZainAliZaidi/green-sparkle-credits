@@ -39,7 +39,7 @@ All colors MUST be HSL.
     --input: 142 20% 90%;
     --ring: 142 76% 36%;
 
-    --radius: 0.75rem;
+    --radius: 0.75rem; /* 12px - consistent card border radius */
     
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
@@ -54,8 +54,6 @@ All colors MUST be HSL.
     --gradient-green: linear-gradient(135deg, #10b981, #059669);
     --gradient-blue: linear-gradient(135deg, #3b82f6, #2563eb);
     --gradient-purple: linear-gradient(135deg, #8b5cf6, #7c3aed);
-
-    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 

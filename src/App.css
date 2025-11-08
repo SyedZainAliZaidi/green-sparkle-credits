@@ -1,6 +1,32 @@
 /* This file is kept for legacy compatibility but styles are primarily in index.css */
 
-/* Page transition animation */
+/* Smooth page transitions */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageExit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Apply to main content areas */
+main {
+  animation: pageEnter 300ms ease-out;
+}
+
+/* Legacy transition classes for compatibility */
 .page-transition-enter {
   opacity: 0;
   transform: translateY(10px);

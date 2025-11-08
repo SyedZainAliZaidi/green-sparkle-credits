@@ -8,6 +8,7 @@ import { SubmissionDetailModal } from "@/components/SubmissionDetailModal";
 import { UserProfileModal } from "@/components/UserProfileModal";
 import { RegionalImpactMap } from "@/components/RegionalImpactMap";
 import { FeaturedStoriesCarousel } from "@/components/FeaturedStoriesCarousel";
+import { LoadingButton } from "@/components/LoadingButton";
 import {
   Select,
   SelectContent,
@@ -60,6 +61,7 @@ export default function Community() {
   const navigate = useNavigate();
   const [hasSubmissions] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const { triggerLight, triggerSuccess } = useHaptic();
   
   // Modal states
@@ -267,6 +269,16 @@ export default function Community() {
     setActiveFilters(newFilters);
   };
 
+  const handleLoadMore = async () => {
+    setIsLoadingMore(true);
+    triggerLight();
+    // Simulate loading more data
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setIsLoadingMore(false);
+    triggerSuccess();
+    toast.success("More submissions loaded! ✨");
+  };
+
   const totalCO2 = 12.45;
   const totalUsers = 3420;
 
@@ -427,9 +439,15 @@ export default function Community() {
 
         {/* Load More */}
         <div className="mt-6 text-center">
-          <Button variant="outline" className="w-full sm:w-auto">
-            Load More
-          </Button>
+          <LoadingButton 
+            variant="outline" 
+            className="w-full sm:w-auto min-w-[200px]"
+            onClick={handleLoadMore}
+            isLoading={isLoadingMore}
+            loadingText="Loading more..."
+          >
+            Load More Submissions
+          </LoadingButton>
         </div>
         </>
         )}

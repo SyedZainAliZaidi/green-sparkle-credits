@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useHaptic } from "@/hooks/useHaptic";
 import { CameraCapture } from "@/components/CameraCapture";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
+import { LoadingButton } from "@/components/LoadingButton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -115,8 +117,28 @@ export default function Upload() {
     toast.info("🔊 Voice guidance: Take a clear photo of your cookstove from the front. Make sure the entire stove is visible.");
   };
 
+  const getOverlayMessage = () => {
+    switch (uploadStage) {
+      case "upload":
+        return "Uploading image...";
+      case "analyze":
+        return "Analyzing with AI...";
+      case "calculate":
+        return "Calculating impact...";
+      default:
+        return "Processing...";
+    }
+  };
+
   return (
     <>
+      {/* Full Screen Loading Overlay */}
+      <LoadingOverlay 
+        isVisible={isUploading} 
+        message={getOverlayMessage()}
+        progress={uploadProgress}
+      />
+
       {/* Camera Component */}
       {showCamera && (
         <CameraCapture
@@ -250,32 +272,27 @@ export default function Upload() {
                 )}
 
                 <div className="flex gap-3">
-                  <Button
+                  <LoadingButton
                     variant="outline"
                     onClick={() => {
                       setImage(null);
                       setUploadError(null);
                     }}
                     className="flex-1"
-                    disabled={isUploading}
+                    isLoading={isUploading}
+                    loadingText="Wait..."
                   >
                     Retake
-                  </Button>
-                  <Button
+                  </LoadingButton>
+                  <LoadingButton
                     id="verify-button"
                     onClick={initiateVerification}
-                    disabled={isUploading}
-                    className="flex-1 gap-2"
+                    className="flex-1"
+                    isLoading={isUploading}
+                    loadingText="Processing..."
                   >
-                    {isUploading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      "Verify Cookstove"
-                    )}
-                  </Button>
+                    Verify Cookstove
+                  </LoadingButton>
                 </div>
               </div>
             )}

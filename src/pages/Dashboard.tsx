@@ -72,29 +72,37 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen pb-20 bg-background">
-        <div className="px-4 py-6 max-w-screen-lg mx-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-foreground mb-2">Your Impact Dashboard</h1>
-            <p className="text-muted-foreground">Track your earnings and environmental impact</p>
+      <div className="min-h-screen bg-background w-full overflow-x-hidden">
+        <div className="py-6 sm:py-8 max-w-screen-lg mx-auto space-y-6 sm:space-y-8">
+          <div className="space-y-2">
+            <div className="h-8 w-48 bg-muted rounded animate-skeleton" />
+            <div className="h-4 w-64 bg-muted rounded animate-skeleton" style={{ animationDelay: "150ms" }} />
           </div>
           
+          {/* Skeleton Hero Card */}
+          <Card className="p-6 sm:p-8 shadow-card">
+            <div className="space-y-4">
+              <div className="h-4 w-32 bg-muted rounded animate-skeleton" />
+              <div className="h-16 w-40 bg-muted rounded animate-skeleton" style={{ animationDelay: "150ms" }} />
+              <div className="h-6 w-48 bg-muted rounded animate-skeleton" style={{ animationDelay: "300ms" }} />
+            </div>
+          </Card>
+
+          {/* Skeleton Chart */}
+          <SkeletonLoader type="chart" />
+
           {/* Skeleton Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <SkeletonLoader type="stat" />
             <SkeletonLoader type="stat" />
             <SkeletonLoader type="stat" />
             <SkeletonLoader type="stat" />
           </div>
 
-          {/* Skeleton Chart */}
-          <SkeletonLoader type="chart" className="mb-6" />
-
           {/* Skeleton Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <SkeletonLoader type="stat" />
-            <SkeletonLoader type="stat" />
-            <SkeletonLoader type="stat" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <SkeletonLoader type="card" />
+            <SkeletonLoader type="card" />
           </div>
         </div>
       </div>

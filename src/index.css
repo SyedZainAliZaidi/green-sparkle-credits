@@ -161,5 +161,19 @@ All colors MUST be HSL.
   .animate-wave {
     animation: wave 0.8s ease-in-out infinite;
   }
+
+  /* Pulsing animation for skeleton loaders */
+  @keyframes skeleton-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  .animate-skeleton {
+    animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
 

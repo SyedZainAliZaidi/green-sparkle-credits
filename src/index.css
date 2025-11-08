@@ -51,6 +51,9 @@ All colors MUST be HSL.
     --gradient-primary: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 46%));
     --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(160 84% 39%));
     --gradient-warm: linear-gradient(135deg, hsl(37 90% 51%), hsl(45 93% 47%));
+    --gradient-green: linear-gradient(135deg, #10b981, #059669);
+    --gradient-blue: linear-gradient(135deg, #3b82f6, #2563eb);
+    --gradient-purple: linear-gradient(135deg, #8b5cf6, #7c3aed);
 
     --radius: 0.75rem;
 

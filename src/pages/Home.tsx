@@ -66,18 +66,21 @@ export default function Home() {
             label="Your Credits"
             value="245"
             trend="+12 this week"
+            gradient="green"
           />
           <StatCard
             icon={Leaf}
             label="CO₂ Saved"
             value="1.2t"
             trend="15 trees equivalent"
+            gradient="blue"
           />
           <StatCard
             icon={Award}
             label="Your Rank"
             value="#42"
             trend="Gold Member"
+            gradient="purple"
             className="col-span-2 sm:col-span-1"
           />
         </div>

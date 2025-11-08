@@ -90,9 +90,18 @@ export default {
           "70%": { transform: "scale(0.9)" },
           "100%": { transform: "scale(1)", opacity: "1" }
         },
-        "confetti": {
-          "0%": { transform: "translateY(0) rotate(0deg)", opacity: "1" },
-          "100%": { transform: "translateY(-100vh) rotate(720deg)", opacity: "0" }
+        "pulse-soft": {
+          "0%, 100%": { transform: "scale(1)", opacity: "1" },
+          "50%": { transform: "scale(1.05)", opacity: "0.9" }
+        },
+        "shake": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-4px)" },
+          "20%, 40%, 60%, 80%": { transform: "translateX(4px)" }
+        },
+        "progress-fill": {
+          "0%": { transform: "scaleX(0)", transformOrigin: "left" },
+          "100%": { transform: "scaleX(1)", transformOrigin: "left" }
         },
       },
       animation: {
@@ -101,7 +110,9 @@ export default {
         "fade-in": "fade-in 0.3s ease-out",
         "scale-in": "scale-in 0.2s ease-out",
         "bounce-in": "bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
-        "confetti": "confetti 3s ease-out forwards",
+        "pulse-soft": "pulse-soft 2s ease-in-out infinite",
+        "shake": "shake 0.5s ease-in-out",
+        "progress-fill": "progress-fill 0.5s ease-out forwards",
       },
     },
   },

@@ -176,7 +176,12 @@ export default function Quiz() {
               Question {currentQuestion + 1} of {questions.length}
             </span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-primary to-success transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
 
         {/* Question Card */}

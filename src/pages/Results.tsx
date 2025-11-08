@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CheckCircle, Leaf, Heart, Share2, TrendingUp, Award } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import confetti from "canvas-confetti";
 
 export default function Results() {
   const navigate = useNavigate();
@@ -12,6 +13,41 @@ export default function Results() {
 
   useEffect(() => {
     setShowConfetti(true);
+    
+    // Trigger confetti animation
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+    const randomInRange = (min: number, max: number) => {
+      return Math.random() * (max - min) + min;
+    };
+
+    const interval = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        return;
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        colors: ['#10b981', '#059669', '#34d399', '#6ee7b7'],
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        colors: ['#10b981', '#059669', '#34d399', '#6ee7b7'],
+      });
+    }, 250);
+
+    return () => clearInterval(interval);
   }, []);
 
   const creditsEarned = 25;
@@ -19,24 +55,7 @@ export default function Results() {
   const treesEquivalent = 8;
 
   return (
-    <div className="min-h-screen pb-20 bg-background relative overflow-hidden">
-      {/* Confetti Animation */}
-      {showConfetti && (
-        <div className="fixed inset-0 pointer-events-none z-50">
-          {Array.from({ length: 30 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-2 h-2 rounded-full animate-confetti"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `-10%`,
-                backgroundColor: ["#10b981", "#fbbf24", "#3b82f6", "#f43f5e"][i % 4],
-                animationDelay: `${Math.random() * 0.5}s`,
-              }}
-            />
-          ))}
-        </div>
-      )}
+    <div className="min-h-screen pb-20 bg-background relative overflow-hidden animate-fade-in">
 
       <div className="px-4 py-6 max-w-screen-lg mx-auto">
         {/* Success Header */}

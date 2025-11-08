@@ -25,6 +25,10 @@ export default function Upload() {
   const handleVerify = async () => {
     if (!image) {
       toast.error("Please capture an image first");
+      // Trigger shake animation on error
+      const button = document.getElementById("verify-button");
+      button?.classList.add("animate-shake");
+      setTimeout(() => button?.classList.remove("animate-shake"), 500);
       return;
     }
 
@@ -89,13 +93,6 @@ export default function Upload() {
           <div className="space-y-6">
             {!image ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="p-6 rounded-full bg-primary/10 mb-6">
-                  <Camera className="h-16 w-16 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Ready to Capture</h3>
-                <p className="text-sm text-muted-foreground text-center mb-6 max-w-sm">
-                  Position your cookstove in good lighting and tap the button below
-                </p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -104,14 +101,18 @@ export default function Upload() {
                   onChange={handleImageCapture}
                   className="hidden"
                 />
-                <Button
-                  size="lg"
+                <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="gap-2 h-14 px-8"
+                  className="relative w-[100px] h-[100px] rounded-full bg-gradient-to-br from-primary to-success text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-pulse-soft mb-6 group"
                 >
-                  <Camera className="h-5 w-5" />
-                  Capture Photo
-                </Button>
+                  <Camera className="h-12 w-12 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" />
+                  <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+                <h3 className="text-lg font-semibold mb-2">Ready to Capture</h3>
+                <p className="text-sm text-muted-foreground text-center mb-4 max-w-sm">
+                  Position your cookstove in good lighting and tap the button above
+                </p>
+                <p className="text-xs text-muted-foreground">Tap the glowing button to take a photo 📸</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -137,6 +138,7 @@ export default function Upload() {
                     Retake
                   </Button>
                   <Button
+                    id="verify-button"
                     onClick={handleVerify}
                     disabled={isUploading}
                     className="flex-1 gap-2"

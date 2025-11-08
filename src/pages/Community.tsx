@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, MapPin, Coins, Clock } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
+import { Heart, MapPin, Coins, Clock, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface Submission {
   id: number;
@@ -17,6 +19,8 @@ interface Submission {
 }
 
 export default function Community() {
+  const navigate = useNavigate();
+  const [hasSubmissions] = useState(true); // Set to false to see empty state
   const [submissions, setSubmissions] = useState<Submission[]>([
     {
       id: 1,
@@ -99,8 +103,29 @@ export default function Community() {
   const totalCO2 = 12.45;
   const totalUsers = 3420;
 
+  if (!hasSubmissions) {
+    return (
+      <div className="min-h-screen pb-20 bg-background animate-fade-in">
+        <div className="px-4 py-6 max-w-screen-lg mx-auto">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Community Impact</h1>
+            <p className="text-muted-foreground">See what others are achieving</p>
+          </div>
+          <EmptyState
+            icon={Upload}
+            emoji="🌱"
+            title="Be the first to share!"
+            description="Your community is waiting to see your clean cookstove. Upload a photo to inspire others and start earning credits."
+            actionLabel="Upload Photo"
+            onAction={() => navigate("/upload")}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen pb-20 bg-background">
+    <div className="min-h-screen pb-20 bg-background animate-fade-in">
       <div className="px-4 py-6 max-w-screen-lg mx-auto">
         {/* Header */}
         <div className="mb-6">

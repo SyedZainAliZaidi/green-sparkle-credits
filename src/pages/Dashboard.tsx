@@ -1,9 +1,35 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { StatCard } from "@/components/StatCard";
-import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
+import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind, Camera } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const [hasData] = useState(true); // Set to false to see empty state
+  
+  if (!hasData) {
+    return (
+      <div className="min-h-screen pb-20 bg-background animate-fade-in">
+        <div className="px-4 py-6 max-w-screen-lg mx-auto">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-foreground mb-2">Your Impact Dashboard</h1>
+            <p className="text-muted-foreground">Track your earnings and environmental impact</p>
+          </div>
+          <EmptyState
+            icon={Camera}
+            emoji="📸"
+            title="Take your first photo to start earning!"
+            description="Capture a photo of your clean cookstove to earn carbon credits and start tracking your environmental impact."
+            actionLabel="Take Photo"
+            onAction={() => navigate("/upload")}
+          />
+        </div>
+      </div>
+    );
+  }
   const chartData = [
     { week: "Week 1", credits: 45 },
     { week: "Week 2", credits: 78 },
@@ -37,18 +63,21 @@ export default function Dashboard() {
             label="Total Credits"
             value="245"
             trend="+25 this week"
+            gradient="green"
           />
           <StatCard
             icon={Leaf}
             label="CO₂ Prevented"
             value="1.2t"
             trend="This year"
+            gradient="blue"
           />
           <StatCard
             icon={Upload}
             label="Submissions"
             value="18"
             trend="8 this month"
+            gradient="purple"
           />
           <StatCard
             icon={TrendingUp}

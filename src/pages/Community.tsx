@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/EmptyState";
-import { SkeletonLoader } from "@/components/SkeletonLoader";
+import { SubmissionCard, SubmissionCardSkeleton } from "@/components/SubmissionCard";
 import { SubmissionDetailModal } from "@/components/SubmissionDetailModal";
 import { UserProfileModal } from "@/components/UserProfileModal";
 import { RegionalImpactMap } from "@/components/RegionalImpactMap";
@@ -320,15 +320,15 @@ export default function Community() {
 
             {/* Skeleton Filter Options */}
             <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-              {Array(4).fill(0).map((_, i) => (
-                <div key={i} className="h-8 w-20 bg-muted rounded animate-pulse" />
+              {Array(2).fill(0).map((_, i) => (
+                <div key={i} className="h-10 w-32 bg-muted rounded animate-pulse" />
               ))}
             </div>
 
-            {/* Skeleton Submissions Grid */}
-            <div className="grid gap-4">
+            {/* Skeleton Submissions Grid - Responsive */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
               {Array(6).fill(0).map((_, i) => (
-                <SkeletonLoader key={i} />
+                <SubmissionCardSkeleton key={i} />
               ))}
             </div>
           </>
@@ -402,8 +402,8 @@ export default function Community() {
           </div>
         )}
 
-        {/* Submissions Grid */}
-        <div className="grid gap-4">
+        {/* Submissions Grid - Responsive 3/2/1 columns */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
           {submissions.map((submission) => {
             const swipeHandlers = useSwipeable({
               onSwipedLeft: () => handleLike(submission.id),
@@ -411,68 +411,25 @@ export default function Community() {
             });
             
             return (
-            <Card 
-              key={submission.id} 
-              {...swipeHandlers} 
-              className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
-              onClick={() => handleSubmissionClick(submission)}
-            >
-              <div className="flex gap-4 p-4">
-                {/* Image */}
-                <div className="w-24 h-24 flex-shrink-0 rounded-lg bg-muted overflow-hidden">
-                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-success/20" />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground truncate">{submission.user}</h3>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <MapPin className="h-3 w-3 flex-shrink-0" />
-                        <span className="truncate">{submission.location}</span>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "h-8 px-2 gap-1",
-                        submission.liked && "text-destructive"
-                      )}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLike(submission.id);
-                      }}
-                    >
-                      <Heart
-                        className={cn(
-                          "h-4 w-4",
-                          submission.liked && "fill-current"
-                        )}
-                      />
-                      <span className="text-xs">{submission.likes}</span>
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
-                    <span className="px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                      {submission.cookstoveType}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <Coins className="h-3 w-3 text-accent" />
-                      <span className="font-medium text-accent">{submission.credits}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    <span>{submission.timestamp}</span>
-                  </div>
-                </div>
+              <div key={submission.id} {...swipeHandlers}>
+                <SubmissionCard
+                  id={submission.id}
+                  user={submission.user}
+                  avatar={submission.avatar}
+                  location={submission.location}
+                  cookstoveType={submission.cookstoveType}
+                  credits={submission.credits}
+                  co2Prevented={submission.co2Prevented}
+                  likes={submission.likes}
+                  liked={submission.liked}
+                  timestamp={submission.timestamp}
+                  image={submission.image}
+                  onClick={() => handleSubmissionClick(submission)}
+                  onLike={() => handleLike(submission.id)}
+                  onUserClick={() => handleUserClick(submission.user)}
+                />
               </div>
-            </Card>
-          );
+            );
           })}
         </div>
 

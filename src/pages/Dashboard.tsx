@@ -7,8 +7,10 @@ import { AchievementModal } from "@/components/AchievementModal";
 import { BadgeCollection } from "@/components/BadgeCollection";
 import { StreakTracker } from "@/components/StreakTracker";
 import { Leaderboard } from "@/components/Leaderboard";
+import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { Progress } from "@/components/ui/progress";
-import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind, Camera } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind, Camera, Globe, Image as ImageIcon, DollarSign, Users } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useNavigate } from "react-router-dom";
 import { achievementsData } from "@/data/achievements";
@@ -92,14 +94,17 @@ export default function Dashboard() {
       </div>
     );
   }
+  const totalCredits = 245;
+  const dollarValue = (totalCredits * 2.5).toFixed(2);
+
   const chartData = [
-    { week: "Week 1", credits: 45 },
-    { week: "Week 2", credits: 78 },
-    { week: "Week 3", credits: 92 },
-    { week: "Week 4", credits: 125 },
-    { week: "Week 5", credits: 156 },
-    { week: "Week 6", credits: 189 },
-    { week: "Week 7", credits: 245 },
+    { date: "Nov 1", credits: 45 },
+    { date: "Nov 3", credits: 78 },
+    { date: "Nov 5", credits: 92 },
+    { date: "Nov 7", credits: 125 },
+    { date: "Nov 9", credits: 156 },
+    { date: "Nov 11", credits: 189 },
+    { date: "Nov 13", credits: 245 },
   ];
 
   // Mock data for leaderboard
@@ -135,164 +140,190 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen pb-20 bg-background">
       <div className="px-4 py-6 max-w-screen-lg mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Your Impact Dashboard</h1>
-          <p className="text-muted-foreground">Track your earnings and environmental impact</p>
-        </div>
+        {/* Hero Stat Card */}
+        <Card className="p-8 mb-6 bg-gradient-to-br from-primary via-success to-primary text-primary-foreground relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24" />
+          
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-3">
+              <Coins className="h-6 w-6 opacity-90" />
+              <p className="text-sm font-medium opacity-90">Total Credits Earned</p>
+            </div>
+            
+            <div className="space-y-2 mb-4">
+              <div className="text-6xl font-bold">
+                <AnimatedCounter end={totalCredits} duration={2000} />
+              </div>
+              
+              <div className="flex items-baseline gap-3">
+                <div className="flex items-center gap-1">
+                  <DollarSign className="h-5 w-5 opacity-90" />
+                  <span className="text-2xl font-semibold opacity-95">
+                    <AnimatedCounter end={parseFloat(dollarValue)} duration={2000} decimals={2} />
+                  </span>
+                </div>
+                <span className="text-sm opacity-75">USD equivalent</span>
+              </div>
+            </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <StatCard
-            icon={Coins}
-            label="Total Credits"
-            value="245"
-            trend="+25 this week"
-            gradient="green"
-          />
-          <StatCard
-            icon={Leaf}
-            label="CO₂ Prevented"
-            value="1.2t"
-            trend="This year"
-            gradient="blue"
-          />
-          <StatCard
-            icon={Upload}
-            label="Submissions"
-            value="18"
-            trend="8 this month"
-            gradient="purple"
-          />
-          <StatCard
-            icon={TrendingUp}
-            label="This Week"
-            value="+12"
-            trend="Credits earned"
-          />
-        </div>
+            <div className="flex items-center gap-2 pt-4 border-t border-white/20">
+              <Users className="h-4 w-4 opacity-90" />
+              <p className="text-sm opacity-90 font-medium">
+                50% of credits support household women
+              </p>
+            </div>
+          </div>
+        </Card>
 
-        {/* Credits Chart */}
+        {/* Impact Visualization Chart */}
         <Card className="p-6 mb-6">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Credits Over Time
+            Credit Accumulation Over Time
           </h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                 <XAxis 
-                  dataKey="week" 
+                  dataKey="date" 
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
+                  tickMargin={10}
                 />
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
+                  tickMargin={10}
+                  label={{ value: 'Credits', angle: -90, position: 'insideLeft' }}
                 />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "0.5rem",
+                    padding: "8px 12px"
                   }}
+                  labelStyle={{ fontWeight: 600, marginBottom: 4 }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="credits" 
-                  stroke="hsl(var(--primary))" 
+                  stroke="hsl(var(--success))" 
                   strokeWidth={3}
-                  dot={{ fill: "hsl(var(--primary))", r: 4 }}
-                  activeDot={{ r: 6 }}
+                  dot={{ fill: "hsl(var(--success))", strokeWidth: 2, r: 5 }}
+                  activeDot={{ r: 7, strokeWidth: 0 }}
+                  animationDuration={1500}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        {/* Impact Equivalents */}
-        <div className="mb-6">
-          <h3 className="font-semibold mb-4">Your Impact Equivalent To:</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="p-4 bg-gradient-to-br from-success/10 to-success/5 border-success/20">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-success/10">
-                  <TreePine className="h-6 w-6 text-success" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">63</p>
-                  <p className="text-sm text-muted-foreground">Trees Planted</p>
-                </div>
+        {/* 2x2 Metric Cards Grid */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <Card className="p-5 bg-gradient-to-br from-success/10 to-success/5 border-success/20 hover:shadow-lg transition-shadow">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2.5 rounded-lg bg-success/10">
+                <Globe className="h-6 w-6 text-success" />
               </div>
-            </Card>
+              <span className="text-3xl">🌍</span>
+            </div>
+            <p className="text-3xl font-bold text-foreground mb-1">
+              <AnimatedCounter end={1.2} decimals={1} suffix="t" />
+            </p>
+            <p className="text-sm text-muted-foreground">CO₂ Prevented</p>
+          </Card>
 
-            <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Zap className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">1,450</p>
-                  <p className="text-sm text-muted-foreground">kWh Saved</p>
-                </div>
+          <Card className="p-5 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-lg transition-shadow">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2.5 rounded-lg bg-primary/10">
+                <ImageIcon className="h-6 w-6 text-primary" />
               </div>
-            </Card>
+              <span className="text-3xl">📸</span>
+            </div>
+            <p className="text-3xl font-bold text-foreground mb-1">
+              <AnimatedCounter end={18} />
+            </p>
+            <p className="text-sm text-muted-foreground">Total Submissions</p>
+          </Card>
 
-            <Card className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-accent/10">
-                  <Wind className="h-6 w-6 text-accent" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">3,200</p>
-                  <p className="text-sm text-muted-foreground">Miles Not Driven</p>
-                </div>
+          <Card className="p-5 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 hover:shadow-lg transition-shadow">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2.5 rounded-lg bg-accent/10">
+                <Zap className="h-6 w-6 text-accent" />
               </div>
-            </Card>
-          </div>
+              <span className="text-3xl">⚡</span>
+            </div>
+            <p className="text-3xl font-bold text-foreground mb-1">
+              <AnimatedCounter end={25} suffix="+" />
+            </p>
+            <p className="text-sm text-muted-foreground">This Week Credits</p>
+          </Card>
+
+          <Card className="p-5 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20 hover:shadow-lg transition-shadow">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2.5 rounded-lg bg-emerald-500/10">
+                <TreePine className="h-6 w-6 text-emerald-500" />
+              </div>
+              <span className="text-3xl">🌳</span>
+            </div>
+            <p className="text-3xl font-bold text-foreground mb-1">
+              <AnimatedCounter end={63} />
+            </p>
+            <p className="text-sm text-muted-foreground">Trees Equivalent</p>
+          </Card>
         </div>
 
-        {/* Achievement Progress */}
-        <Card className="p-6 mb-6">
+        {/* Achievements - Horizontal Scroll */}
+        <div className="mb-6">
           <h3 className="font-semibold mb-4 flex items-center gap-2">
             <Award className="h-5 w-5 text-primary" />
-            Achievement Progress
+            Your Achievements
           </h3>
-          <div className="space-y-4">
-            {achievementsData.slice(0, 4).map((achievement) => (
-              <div key={achievement.id} className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{achievement.icon}</span>
-                    <span className="font-medium text-foreground">{achievement.name}</span>
-                    {achievement.unlocked && <span className="text-success">✓</span>}
+          
+          <ScrollArea className="w-full whitespace-nowrap rounded-lg">
+            <div className="flex gap-4 pb-4">
+              {achievementsData.map((achievement) => (
+                <Card 
+                  key={achievement.id}
+                  className={`inline-block w-40 flex-shrink-0 p-4 cursor-pointer transition-all hover:shadow-lg ${
+                    achievement.unlocked 
+                      ? 'bg-gradient-to-br from-primary/10 to-success/10 border-primary/20' 
+                      : 'bg-muted/30 grayscale opacity-60'
+                  }`}
+                  onClick={() => {
+                    if (achievement.unlocked) {
+                      setSelectedAchievement(achievement);
+                      setShowAchievementModal(true);
+                    }
+                  }}
+                >
+                  <div className="text-center space-y-2">
+                    <div className="text-4xl mb-2">{achievement.icon}</div>
+                    <p className="font-semibold text-sm leading-tight text-foreground">
+                      {achievement.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {achievement.unlocked ? `+${achievement.creditsReward} credits` : 'Locked'}
+                    </p>
+                    <div className="pt-2">
+                      <Progress 
+                        value={(achievement.currentProgress / achievement.requirement) * 100} 
+                        className="h-1.5"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {achievement.currentProgress}/{achievement.requirement}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-muted-foreground">
-                    {achievement.currentProgress}/{achievement.requirement}
-                  </span>
-                </div>
-                <Progress 
-                  value={(achievement.currentProgress / achievement.requirement) * 100} 
-                  className="h-2"
-                />
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Badge Collection */}
-        <div className="mb-6">
-          <BadgeCollection 
-            achievements={achievementsData}
-            onBadgeClick={(achievement) => {
-              if (achievement.unlocked) {
-                setSelectedAchievement(achievement);
-                setShowAchievementModal(true);
-              }
-            }}
-          />
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
+
 
         {/* Streak Tracker */}
         <div className="mb-6">
@@ -304,34 +335,46 @@ export default function Dashboard() {
           <Leaderboard entries={leaderboardData} currentUserRank={4} />
         </div>
 
-        {/* Regional Climate Data */}
-        <div>
+        {/* Regional Data Cards */}
+        <div className="mb-6">
           <h3 className="font-semibold mb-4">Regional Climate Data</h3>
-          <div className="grid gap-4">
-            <Card className="p-4 hover:shadow-lg transition-all duration-300">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Solar Potential</p>
-                  <p className="text-xl font-bold">High</p>
-                  <p className="text-xs text-success mt-1">5.8 kWh/m²/day average</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Card className="p-5 bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/20 hover:shadow-lg transition-all duration-300">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="p-2 rounded-lg bg-amber-500/10">
+                      <Zap className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <p className="text-sm text-muted-foreground font-medium">Solar Potential</p>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground mb-1">High</p>
+                  <p className="text-sm text-amber-600 font-medium">5.8 kWh/m²/day average</p>
                 </div>
-                <div className="p-2 rounded-lg bg-accent/10">
-                  <Zap className="h-5 w-5 text-accent" />
-                </div>
+                <span className="text-3xl">☀️</span>
               </div>
+              <p className="text-xs text-muted-foreground pt-3 border-t">
+                Data from NASA POWER
+              </p>
             </Card>
 
-            <Card className="p-4 hover:shadow-lg transition-all duration-300">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Air Quality Index</p>
-                  <p className="text-xl font-bold">Moderate</p>
-                  <p className="text-xs text-primary mt-1">Improving with clean cookstoves</p>
+            <Card className="p-5 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 hover:shadow-lg transition-all duration-300">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="p-2 rounded-lg bg-blue-500/10">
+                      <Wind className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <p className="text-sm text-muted-foreground font-medium">Air Quality Index</p>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground mb-1">Moderate</p>
+                  <p className="text-sm text-blue-600 font-medium">Improving with clean cookstoves</p>
                 </div>
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Wind className="h-5 w-5 text-primary" />
-                </div>
+                <span className="text-3xl">💨</span>
               </div>
+              <p className="text-xs text-muted-foreground pt-3 border-t">
+                Data from OpenAQ
+              </p>
             </Card>
           </div>
         </div>

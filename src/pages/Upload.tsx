@@ -67,16 +67,19 @@ export default function Upload() {
         throw new Error("No image to upload");
       }
 
+      console.log('🚀 Starting upload process...');
       debugLog('Upload', 'Starting verification process');
 
       // Stage 1: Upload image to Supabase Storage
       setUploadStage("upload");
       toast.info("Uploading image...", { id: "upload-status" });
+      console.log('📤 Stage 1: Uploading to storage...');
       
       // Convert base64 to blob
       const base64Response = await fetch(image);
       const blob = await base64Response.blob();
       
+      console.log(`📊 Image size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
       debugLog('Upload', `Image size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
       
       // Generate unique filename with timestamp
@@ -91,41 +94,53 @@ export default function Upload() {
         });
 
       if (uploadError) {
+        console.error('❌ Upload error:', uploadError);
         debugError('Upload', uploadError);
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
+
+      console.log('✅ Upload successful:', uploadData);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('cookstove-images')
         .getPublicUrl(filename);
       
+      console.log('🔗 Image URL:', publicUrl);
       debugApiCall('Storage', 'POST', { filename }, { publicUrl });
 
       await simulateProgress(0, 33, 500);
 
-      // Stage 2: Real AI Analysis using Replicate
+      // Stage 2: ACTUALLY CALL AI ANALYSIS
       setUploadStage("analyze");
       toast.info(isUrdu ? "AI آپ کے چولہے کا تجزیہ کر رہا ہے..." : "AI analyzing your chulha...", { id: "upload-status" });
+      console.log('🤖 Stage 2: Calling AI analysis...');
       
-      // Call AI analysis
+      // Call AI analysis function
       const aiResponse = await analyzeCookstove(publicUrl);
+      
+      console.log('✅ AI analysis complete:', aiResponse);
+      console.log('📋 Detected:', aiResponse.detected);
+      console.log('🔥 Cookstove type:', aiResponse.cookstove_type);
+      console.log('📊 Confidence:', aiResponse.confidence_score + '%');
+      console.log('🌱 CO2 prevented:', aiResponse.co2_prevented + ' kg');
+      console.log('💰 Credits earned:', aiResponse.credits_earned);
       
       debugApiCall('AI Analysis', 'POST', { publicUrl }, aiResponse);
       
-      // Show warning if fallback was used
-      if (aiResponse.fallback) {
-        toast.warning(isUrdu ? "آف لائن تجزیہ استعمال کیا جا رہا ہے" : "Using offline analysis", { 
-          id: "fallback-warning",
-          duration: 3000 
-        });
+      // Check if cookstove was detected
+      if (!aiResponse.detected) {
+        console.warn('⚠️ No cookstove detected in image');
+        toast.warning(isUrdu ? "کوئی چولہا نہیں ملا" : "No cookstove detected", { id: "upload-status" });
+        throw new Error("No cookstove detected. Please try another image.");
       }
 
       await simulateProgress(33, 66, 1500);
 
-      // Stage 3: Calculate credits and save to database
+      // Stage 3: Save results to database
       setUploadStage("calculate");
       toast.info(isUrdu ? "اثرات کا حساب لگایا جا رہا ہے..." : "Calculating impact...", { id: "upload-status" });
+      console.log('💾 Stage 3: Saving to database...');
       
       const creditsEarned = aiResponse.credits_earned;
       const co2Prevented = aiResponse.co2_prevented;
@@ -147,19 +162,23 @@ export default function Upload() {
         .single();
 
       if (dbError) {
-        console.error('Database error:', dbError);
+        console.error('❌ Database error:', dbError);
         debugError('Database', dbError);
         throw new Error(`Failed to save submission: ${dbError.message}`);
       }
       
+      console.log('✅ Submission saved:', submissionData);
+      console.log('🆔 Submission ID:', submissionData.id);
       debugLog('Database', 'Submission saved', { id: submissionData.id });
 
       await simulateProgress(66, 100, 500);
 
-      // Success
+      // Success!
+      console.log('🎉 Upload process complete!');
       toast.success(isUrdu ? "تجزیہ مکمل! 💰" : "Analysis complete! 💰", { id: "upload-status" });
       setTimeout(() => {
         toast.success(isUrdu ? "کریڈٹس آپ کے اکاؤنٹ میں شامل! 💰" : "Credits added to your account! 💰");
+        console.log('🔄 Navigating to results page...');
         navigate("/results", { 
           state: { 
             image: publicUrl,
@@ -174,7 +193,7 @@ export default function Upload() {
         });
       }, 500);
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('❌ Upload process failed:', error);
       debugError('Upload', error);
       const errorMessage = error instanceof Error ? error.message : "Upload failed. Please try again.";
       setUploadError(errorMessage);

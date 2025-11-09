@@ -12,6 +12,9 @@ import Dashboard from "./pages/Dashboard";
 import Community from "./pages/Community";
 import Quiz from "./pages/Quiz";
 import Settings from "./pages/Settings";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
@@ -66,6 +69,9 @@ const App = () => {
           <Route path="/community" element={<Community />} />
           <Route path="/quiz" element={<Quiz />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>

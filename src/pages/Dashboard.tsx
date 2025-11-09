@@ -10,7 +10,9 @@ import { Leaderboard } from "@/components/Leaderboard";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind, Camera, Globe, Image as ImageIcon, DollarSign, Users, Car, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind, Camera, Globe, Image as ImageIcon, DollarSign, Users, Car, Clock, Loader2, Trash2, Sparkles } from "lucide-react";
 import { SolarPotentialCard } from "@/components/SolarPotentialCard";
 import { AirQualityCard } from "@/components/AirQualityCard";
 import { ImpactMap } from "@/components/ImpactMap";
@@ -23,6 +25,8 @@ import { achievementsData } from "@/data/achievements";
 import { Achievement, LeaderboardEntry, StreakData } from "@/types/achievements";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subDays, isAfter } from "date-fns";
+import { seedPakistanDemoData, clearAllSubmissions } from "@/utils/demoData";
+import { useToast } from "@/hooks/use-toast";
 
 interface SubmissionData {
   id: string;
@@ -34,8 +38,11 @@ interface SubmissionData {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [hasData, setHasData] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSeedingData, setIsSeedingData] = useState(false);
+  const [isClearingData, setIsClearingData] = useState(false);
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
   const [submissions, setSubmissions] = useState<SubmissionData[]>([]);
@@ -256,6 +263,46 @@ export default function Dashboard() {
   }, []);
 
   const achievements = getAchievements();
+
+  const handleSeedDemoData = async () => {
+    setIsSeedingData(true);
+    try {
+      const count = await seedPakistanDemoData();
+      toast({
+        title: "Demo Data Added! 🇵🇰",
+        description: `${count} Pakistani submissions added successfully!`,
+      });
+      await fetchDashboardData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add demo data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSeedingData(false);
+    }
+  };
+
+  const handleClearAllData = async () => {
+    setIsClearingData(true);
+    try {
+      await clearAllSubmissions();
+      toast({
+        title: "Data Cleared",
+        description: "All submissions have been deleted.",
+      });
+      await fetchDashboardData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to clear data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsClearingData(false);
+    }
+  };
 
   // Mock data for leaderboard
   const leaderboardData: LeaderboardEntry[] = [
@@ -633,6 +680,75 @@ export default function Dashboard() {
           </div>
           <ImpactMap />
         </div>
+
+        {/* Demo Data Management - Only show if few submissions */}
+        {stats.submissionCount < 3 && (
+          <Card className="p-4 sm:p-6 bg-gradient-to-br from-accent/5 to-primary/5 border-dashed border-2">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Quick Test with Pakistan Demo Data
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Add sample submissions from across Pakistan to test the dashboard features
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={handleSeedDemoData}
+                disabled={isSeedingData}
+                className="gap-2"
+              >
+                {isSeedingData ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    🎲 Add Pakistan Demo Data
+                  </>
+                )}
+              </Button>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    disabled={isClearingData || stats.submissionCount === 0}
+                    className="gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Clear All Data
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure? / کیا آپ کو یقین ہے؟</AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-2">
+                      <p>This will permanently delete all submissions from the database.</p>
+                      <p className="text-right">یہ ڈیٹا بیس سے تمام سبمیشنز کو مستقل طور پر حذف کر دے گا۔</p>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel / منسوخ</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleClearAllData}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {isClearingData ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Deleting...
+                        </>
+                      ) : (
+                        "Delete All / تمام حذف کریں"
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </Card>
+        )}
       </div>
 
       {/* Achievement Modal */}

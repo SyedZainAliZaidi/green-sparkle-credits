@@ -28,6 +28,7 @@ import { format, subDays, isAfter } from "date-fns";
 import { seedPakistanDemoData, clearAllSubmissions } from "@/utils/demoData";
 import { useToast } from "@/hooks/use-toast";
 import { speakText, generateDashboardNarration } from "@/lib/voiceService";
+import { AppFooter } from "@/components/AppFooter";
 
 interface SubmissionData {
   id: string;
@@ -418,6 +419,22 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background w-full overflow-x-hidden pb-20">
       <div className="py-6 sm:py-8 max-w-screen-lg mx-auto space-y-6 sm:space-y-8 px-4">
+        {/* Pakistan Community Banner */}
+        <Card className="p-4 sm:p-6 bg-gradient-to-r from-pakistan-green to-success text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 text-6xl sm:text-8xl opacity-10">🇵🇰</div>
+          <div className="relative z-10">
+            <h2 className="text-lg sm:text-xl font-bold mb-2 flex items-center gap-2">
+              🇵🇰 Join 1000+ Pakistani Households
+            </h2>
+            <p className="text-sm opacity-90 mb-1">
+              Earning clean cooking credits across Punjab, Sindh, KPK, and Balochistan
+            </p>
+            <p className="text-xs opacity-75">
+              Part of Prime Minister's Clean Green Pakistan Initiative • 220M population impact potential
+            </p>
+          </div>
+        </Card>
+
         {/* Header with Voice Button */}
         <div className="flex items-center justify-between mb-2">
           <div>
@@ -790,6 +807,9 @@ export default function Dashboard() {
             </div>
           </Card>
         )}
+
+        {/* Footer */}
+        <AppFooter />
       </div>
 
       {/* Achievement Modal */}

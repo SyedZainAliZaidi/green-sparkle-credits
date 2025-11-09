@@ -63,13 +63,13 @@ export default function Results() {
         ...defaults,
         particleCount,
         origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-        colors: ['#10b981', '#059669', '#34d399', '#6ee7b7'],
+        colors: ['#01411C', '#10b981', '#ffffff', '#059669'], // Pakistan flag colors: dark green, bright green, white
       });
       confetti({
         ...defaults,
         particleCount,
         origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-        colors: ['#10b981', '#059669', '#34d399', '#6ee7b7'],
+        colors: ['#01411C', '#10b981', '#ffffff', '#059669'], // Pakistan flag colors
       });
     }, 250);
 
@@ -146,8 +146,8 @@ export default function Results() {
               </Button>
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            {isUrdu ? "تصدیق کامیاب!" : "Verification Successful!"}
+          <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
+            {isUrdu ? "شاباش! تصدیق کامیاب!" : "Shabash! Verification Successful!"} 🇵🇰
           </h1>
           <p className="text-muted-foreground">
             {isUrdu 

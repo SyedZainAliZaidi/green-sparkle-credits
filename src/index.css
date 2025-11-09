@@ -29,6 +29,9 @@ All colors MUST be HSL.
     --accent: 37 90% 51%;
     --accent-foreground: 0 0% 100%;
 
+    --pakistan-green: 142 99% 13%; /* Pakistan flag dark green #01411C */
+    --pakistan-green-foreground: 0 0% 100%;
+
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 

@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useHaptic } from "@/hooks/useHaptic";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
+import { AppFooter } from "@/components/AppFooter";
 
 interface Submission {
   id: string;
@@ -238,30 +239,42 @@ export default function Community() {
         ) : (
           <>
             {/* Pakistan Community Impact Banner */}
-            <Card className="p-6 mb-6 bg-gradient-to-br from-green-600 via-green-700 to-green-800 text-white shadow-lg">
+            <Card className="p-6 mb-6 bg-gradient-to-br from-pakistan-green via-success to-pakistan-green text-white shadow-lg">
               <div className="text-center mb-4">
-                <h2 className="text-xl font-bold mb-1">🇵🇰 Pakistan Community Impact</h2>
-                <p className="text-sm opacity-90">مل کر، پاکستان موسمیاتی تبدیلی سے لڑ رہا ہے</p>
+                <h2 className="text-2xl font-bold mb-2 flex items-center justify-center gap-2">
+                  🇵🇰 Pakistan Community Impact
+                </h2>
+                <p className="text-sm opacity-90 mb-1">
+                  Together, Pakistan is fighting climate change!
+                </p>
+                <p className="text-xs opacity-75 font-urdu">
+                  مل کر، پاکستان موسمیاتی تبدیلی سے لڑ رہا ہے
+                </p>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-4 mb-3">
                 <div className="text-center">
                   <p className="text-3xl font-bold">{communityStats.totalSubmissions}</p>
-                  <p className="text-xs opacity-90">Total Submissions</p>
-                  <p className="text-xs opacity-75">کل جمع</p>
+                  <p className="text-xs opacity-90">Submissions</p>
+                  <p className="text-[10px] opacity-75">جمع شدہ</p>
                 </div>
                 <div className="text-center">
                   <p className="text-3xl font-bold">{communityStats.totalCO2.toFixed(1)}</p>
-                  <p className="text-xs opacity-90">kg CO₂ Prevented</p>
-                  <p className="text-xs opacity-75">روک تھام</p>
+                  <p className="text-xs opacity-90">Tons CO₂ Saved</p>
+                  <p className="text-[10px] opacity-75">ٹن بچایا</p>
                 </div>
                 <div className="text-center">
                   <p className="text-3xl font-bold">{communityStats.treesEquivalent}</p>
-                  <p className="text-xs opacity-90">Trees Equivalent</p>
-                  <p className="text-xs opacity-75">درخت برابر</p>
+                  <p className="text-xs opacity-90">Trees Planted</p>
+                  <p className="text-[10px] opacity-75">درخت لگائے</p>
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-white/20 text-center">
-                <p className="text-sm font-medium">Together, Pakistan is fighting climate change! 🌍</p>
+              <div className="text-center pt-3 border-t border-white/20">
+                <p className="text-xs opacity-90">
+                  🌍 Lahore is the world's most polluted city. 70% of rural households use biomass.
+                </p>
+                <p className="text-xs opacity-75 mt-1">
+                  Your improved cookstove is making a difference for 220 million Pakistanis!
+                </p>
               </div>
             </Card>
 

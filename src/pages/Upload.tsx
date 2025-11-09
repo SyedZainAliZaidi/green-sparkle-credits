@@ -11,6 +11,7 @@ import { LoadingButton } from "@/components/LoadingButton";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeCookstove } from "@/lib/aiAnalysis";
 import { speakText, generateUploadInstructions } from "@/lib/voiceService";
+import { debugLog, debugApiCall, debugError } from "@/lib/debugUtils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,6 +67,8 @@ export default function Upload() {
         throw new Error("No image to upload");
       }
 
+      debugLog('Upload', 'Starting verification process');
+
       // Stage 1: Upload image to Supabase Storage
       setUploadStage("upload");
       toast.info("Uploading image...", { id: "upload-status" });
@@ -73,6 +76,8 @@ export default function Upload() {
       // Convert base64 to blob
       const base64Response = await fetch(image);
       const blob = await base64Response.blob();
+      
+      debugLog('Upload', `Image size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
       
       // Generate unique filename with timestamp
       const timestamp = Date.now();
@@ -86,6 +91,7 @@ export default function Upload() {
         });
 
       if (uploadError) {
+        debugError('Upload', uploadError);
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
@@ -93,6 +99,8 @@ export default function Upload() {
       const { data: { publicUrl } } = supabase.storage
         .from('cookstove-images')
         .getPublicUrl(filename);
+      
+      debugApiCall('Storage', 'POST', { filename }, { publicUrl });
 
       await simulateProgress(0, 33, 500);
 
@@ -102,6 +110,8 @@ export default function Upload() {
       
       // Call AI analysis
       const aiResponse = await analyzeCookstove(publicUrl);
+      
+      debugApiCall('AI Analysis', 'POST', { publicUrl }, aiResponse);
       
       // Show warning if fallback was used
       if (aiResponse.fallback) {
@@ -138,8 +148,11 @@ export default function Upload() {
 
       if (dbError) {
         console.error('Database error:', dbError);
+        debugError('Database', dbError);
         throw new Error(`Failed to save submission: ${dbError.message}`);
       }
+      
+      debugLog('Database', 'Submission saved', { id: submissionData.id });
 
       await simulateProgress(66, 100, 500);
 
@@ -162,6 +175,7 @@ export default function Upload() {
       }, 500);
     } catch (error) {
       console.error('Upload error:', error);
+      debugError('Upload', error);
       const errorMessage = error instanceof Error ? error.message : "Upload failed. Please try again.";
       setUploadError(errorMessage);
       toast.error(errorMessage, { id: "upload-status" });

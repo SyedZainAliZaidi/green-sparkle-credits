@@ -1,4 +1,4 @@
-import { Home, Upload, BarChart3, Users } from "lucide-react";
+import { Home, Upload, BarChart3, Users, Settings } from "lucide-react";
 import { NavLink } from "./NavLink";
 import { cn } from "@/lib/utils";
 import { useHaptic } from "@/hooks/useHaptic";
@@ -8,6 +8,7 @@ const navItems = [
   { to: "/upload", icon: Upload, label: "Upload" },
   { to: "/dashboard", icon: BarChart3, label: "Dashboard" },
   { to: "/community", icon: Users, label: "Community" },
+  { to: "/settings", icon: Settings, label: "Settings" },
 ];
 
 export const BottomNav = () => {

@@ -158,11 +158,26 @@ export function CameraCapture({ onCapture, onClose }: CameraProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxSize) {
+      toast.error("Image too large! Please select an image smaller than 5MB.");
+      return;
+    }
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Invalid file format! Please select a JPG, PNG, or WebP image.");
+      return;
+    }
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setCapturedImage(reader.result as string);
       stopCamera();
       haptic.triggerSuccess();
+      toast.success("Image loaded successfully! ✓");
     };
     reader.readAsDataURL(file);
   };

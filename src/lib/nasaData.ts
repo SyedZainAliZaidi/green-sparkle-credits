@@ -1,7 +1,52 @@
+// Cache configuration
+const CACHE_KEY_PREFIX = 'nasa_power_data_';
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+
+interface CachedData {
+  data: SolarData;
+  timestamp: number;
+}
+
 export interface SolarData {
   solarIrradiance: string;
   solarPotential: 'Excellent' | 'Good' | 'Moderate';
   recommendation: string;
+}
+
+// Get cached data if available and not expired
+function getCachedData(key: string): SolarData | null {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY_PREFIX + key);
+    if (!cached) return null;
+    
+    const { data, timestamp }: CachedData = JSON.parse(cached);
+    const now = Date.now();
+    
+    // Check if cache is still valid
+    if (now - timestamp < CACHE_DURATION) {
+      console.log('Using cached NASA POWER data');
+      return data;
+    }
+    
+    // Cache expired, remove it
+    localStorage.removeItem(CACHE_KEY_PREFIX + key);
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// Store data in cache
+function setCachedData(key: string, data: SolarData): void {
+  try {
+    const cacheData: CachedData = {
+      data,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify(cacheData));
+  } catch (error) {
+    console.warn('Failed to cache NASA POWER data:', error);
+  }
 }
 
 export interface CityCoordinates {
@@ -32,6 +77,15 @@ export async function getNASAPowerData(
   latitude: number,
   longitude: number
 ): Promise<SolarData | null> {
+  // Create cache key based on coordinates (rounded to 2 decimal places)
+  const cacheKey = `${latitude.toFixed(2)}_${longitude.toFixed(2)}`;
+  
+  // Check cache first
+  const cachedResult = getCachedData(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
   const url = `https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=ALLSKY_SFC_SW_DWN&community=RE&longitude=${longitude}&latitude=${latitude}&format=JSON`;
 
   try {
@@ -75,11 +129,16 @@ export async function getNASAPowerData(
       solarPotential,
     });
 
-    return {
+    const result: SolarData = {
       solarIrradiance: annualAverage.toFixed(2),
       solarPotential,
       recommendation,
     };
+
+    // Cache the result
+    setCachedData(cacheKey, result);
+
+    return result;
   } catch (error) {
     console.error('NASA POWER API error:', error);
     return null;

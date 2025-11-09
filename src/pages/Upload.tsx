@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Camera, Volume2, CheckCircle, Info, Loader2 } from "lucide-react";
@@ -8,6 +8,7 @@ import { useHaptic } from "@/hooks/useHaptic";
 import { CameraCapture } from "@/components/CameraCapture";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { LoadingButton } from "@/components/LoadingButton";
+import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,30 +59,95 @@ export default function Upload() {
     setUploadProgress(0);
 
     try {
-      // Stage 1: Uploading image
+      if (!image) {
+        throw new Error("No image to upload");
+      }
+
+      // Stage 1: Upload image to Supabase Storage
       setUploadStage("upload");
       toast.info("Uploading image...", { id: "upload-status" });
-      await simulateProgress(0, 33, 800);
+      
+      // Convert base64 to blob
+      const base64Response = await fetch(image);
+      const blob = await base64Response.blob();
+      
+      // Generate unique filename with timestamp
+      const timestamp = Date.now();
+      const filename = `cookstove_${timestamp}.jpg`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('cookstove-images')
+        .upload(filename, blob, {
+          contentType: 'image/jpeg',
+          cacheControl: '3600',
+        });
 
-      // Stage 2: AI Analysis
+      if (uploadError) {
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('cookstove-images')
+        .getPublicUrl(filename);
+
+      await simulateProgress(0, 33, 500);
+
+      // Stage 2: AI Analysis (simulated)
       setUploadStage("analyze");
       toast.info("Analyzing with AI...", { id: "upload-status" });
       await simulateProgress(33, 66, 1000);
 
-      // Stage 3: Calculating impact
+      // Stage 3: Calculate credits and save to database
       setUploadStage("calculate");
       toast.info("Calculating impact...", { id: "upload-status" });
-      await simulateProgress(66, 100, 700);
+      
+      // Calculate random credits and CO2 values (in real app, this would come from AI)
+      const creditsEarned = Math.floor(Math.random() * 50) + 50; // 50-100 credits
+      const co2Prevented = (creditsEarned * 0.5).toFixed(2); // 0.5 kg CO2 per credit
+      const transactionHash = `0x${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+
+      // Save submission to database
+      const { data: submissionData, error: dbError } = await supabase
+        .from('submissions')
+        .insert({
+          image_url: publicUrl,
+          credits_earned: creditsEarned,
+          co2_prevented: parseFloat(co2Prevented),
+          cookstove_type: 'Clean Cookstove',
+          verified: true,
+          transaction_hash: transactionHash,
+          location: 'Pakistan',
+        })
+        .select()
+        .single();
+
+      if (dbError) {
+        console.error('Database error:', dbError);
+        throw new Error(`Failed to save submission: ${dbError.message}`);
+      }
+
+      await simulateProgress(66, 100, 500);
 
       // Success
       toast.success("Analysis complete! 💰", { id: "upload-status" });
       setTimeout(() => {
         toast.success("Credits added to your account! 💰");
-        navigate("/results", { state: { image } });
+        navigate("/results", { 
+          state: { 
+            image: publicUrl,
+            credits: creditsEarned,
+            co2: co2Prevented,
+            transactionHash,
+            submissionId: submissionData.id
+          } 
+        });
       }, 500);
     } catch (error) {
-      setUploadError("Upload failed. Please try again.");
-      toast.error("Upload failed. Please try again.", { id: "upload-status" });
+      console.error('Upload error:', error);
+      const errorMessage = error instanceof Error ? error.message : "Upload failed. Please try again.";
+      setUploadError(errorMessage);
+      toast.error(errorMessage, { id: "upload-status" });
     } finally {
       setIsUploading(false);
       setUploadStage(null);

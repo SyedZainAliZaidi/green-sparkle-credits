@@ -1,18 +1,27 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle, Leaf, Heart, Share2, TrendingUp, Award, Car, Lightbulb, Home as HomeIcon } from "lucide-react";
+import { CheckCircle, Leaf, Heart, Share2, Award, Car, Lightbulb, Home as HomeIcon } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { EducationalFactsCarousel } from "@/components/EducationalFactsCarousel";
+import { VerificationBadge } from "@/components/VerificationBadge";
 
 export default function Results() {
   const navigate = useNavigate();
   const location = useLocation();
-  const image = location.state?.image;
+  const { image, credits, co2, transactionHash, submissionId } = location.state || {};
   const [showConfetti, setShowConfetti] = useState(false);
+
+  // Use data from state or fallback to defaults
+  const creditsEarned = credits || 25;
+  const co2Prevented = co2 ? parseFloat(co2) : 0.15;
+  const treesEquivalent = Math.round(creditsEarned * 0.32); // ~0.32 trees per credit
+  const milesNotDriven = Math.round(co2Prevented * 2467); // CO2 to miles conversion
+  const kwhSaved = Math.round(creditsEarned * 17); // ~17 kWh per credit
+  const homesPowered = (kwhSaved / 877).toFixed(1); // avg home uses 877 kWh/month
 
   useEffect(() => {
     setShowConfetti(true);
@@ -59,13 +68,6 @@ export default function Results() {
 
     return () => clearInterval(interval);
   }, []);
-
-  const creditsEarned = 25;
-  const co2Prevented = 0.15; // tons
-  const treesEquivalent = 8;
-  const milesNotDriven = 370; // miles
-  const kwhSaved = 425; // kWh
-  const homesPowered = 0.2; // homes for a month
 
   return (
     <div className="min-h-screen pb-20 bg-background relative overflow-hidden animate-fade-in">
@@ -135,7 +137,7 @@ export default function Results() {
                 <HomeIcon className="h-6 w-6 text-secondary-foreground" />
               </div>
               <p className="text-2xl font-bold text-foreground">
-                <AnimatedCounter end={homesPowered} decimals={1} />
+                <AnimatedCounter end={parseFloat(homesPowered)} decimals={1} />
               </p>
               <p className="text-xs text-muted-foreground">Homes Powered</p>
             </div>
@@ -173,16 +175,19 @@ export default function Results() {
               <Award className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold mb-1">Verified: Rocket Stove</h3>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold">Verified: Clean Cookstove</h3>
+                {transactionHash && <VerificationBadge verified={true} transactionHash={transactionHash} />}
+              </div>
               <p className="text-sm text-muted-foreground">
-                This highly efficient design burns wood completely, reducing emissions by up to 80%
+                This highly efficient design burns fuel completely, reducing emissions by up to 80%
               </p>
             </div>
           </div>
           
           {image && (
             <div className="rounded-lg overflow-hidden">
-              <img src={image} alt="Verified cookstove" className="w-full h-auto" />
+              <img src={image} alt="Verified clean cookstove" className="w-full h-auto" loading="lazy" />
             </div>
           )}
         </Card>

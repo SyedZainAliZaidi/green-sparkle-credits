@@ -13,8 +13,11 @@ serve(async (req) => {
 
   try {
     const { imageUrl } = await req.json();
+    console.log('🔍 Analyze-cookstove function called');
+    console.log('📷 Image URL:', imageUrl);
     
     if (!imageUrl) {
+      console.error('❌ Missing imageUrl parameter');
       return new Response(
         JSON.stringify({ error: "Missing imageUrl parameter" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -23,13 +26,15 @@ serve(async (req) => {
 
     const REPLICATE_API_KEY = Deno.env.get('REPLICATE_API_KEY');
     if (!REPLICATE_API_KEY) {
-      console.error('REPLICATE_API_KEY not configured');
-      throw new Error('AI service not configured');
+      console.error('❌ REPLICATE_API_KEY not configured in Supabase secrets');
+      throw new Error('AI service not configured - REPLICATE_API_KEY missing');
     }
 
-    console.log('Starting Replicate analysis for image:', imageUrl);
+    console.log('✅ REPLICATE_API_KEY found');
+    console.log('🚀 Starting Replicate analysis for image:', imageUrl);
 
     // Call Replicate API with LLaVA model for vision analysis
+    console.log('📡 Calling Replicate API...');
     const response = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
@@ -56,12 +61,13 @@ Is there a cookstove/chulha visible? What type is it?`,
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Replicate API error:', response.status, errorText);
+      console.error('❌ Replicate API error:', response.status, errorText);
       throw new Error(`Replicate API failed: ${response.status}`);
     }
 
     const prediction = await response.json();
-    console.log('Initial prediction created:', prediction.id);
+    console.log('✅ Initial prediction created:', prediction.id);
+    console.log('⏳ Status:', prediction.status);
 
     // Poll for completion
     let result = prediction;
@@ -79,22 +85,22 @@ Is there a cookstove/chulha visible? What type is it?`,
 
       result = await pollResponse.json();
       attempts++;
-      console.log(`Poll attempt ${attempts}: status=${result.status}`);
+      console.log(`🔄 Poll attempt ${attempts}/${maxAttempts}: status=${result.status}`);
     }
 
     if (result.status === 'failed') {
-      console.error('Replicate prediction failed:', result.error);
+      console.error('❌ Replicate prediction failed:', result.error);
       throw new Error('AI analysis failed');
     }
 
     if (result.status !== 'succeeded') {
-      console.error('Replicate prediction timed out');
+      console.error('⏱️ Replicate prediction timed out after', maxAttempts, 'attempts');
       throw new Error('AI analysis timed out');
     }
 
     // Parse the output
     const outputText = Array.isArray(result.output) ? result.output.join('') : result.output;
-    console.log('Raw AI output:', outputText);
+    console.log('📄 Raw AI output:', outputText);
 
     // Extract JSON from the response
     let parsed;
@@ -102,12 +108,16 @@ Is there a cookstove/chulha visible? What type is it?`,
       // Try to find JSON in the response
       const jsonMatch = outputText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
+        console.log('🔍 Found JSON in response:', jsonMatch[0]);
         parsed = JSON.parse(jsonMatch[0]);
+        console.log('✅ Parsed AI response:', parsed);
       } else {
+        console.warn('⚠️ No JSON found in response, using fallback');
         throw new Error('No JSON found in response');
       }
     } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
+      console.error('❌ Failed to parse AI response:', parseError);
+      console.log('🔄 Using fallback values');
       // Use fallback values
       parsed = {
         detected: true,
@@ -136,7 +146,9 @@ Is there a cookstove/chulha visible? What type is it?`,
       credits_earned: credits,
     };
 
-    console.log('Analysis complete:', analysisResult);
+    console.log('✅ Analysis complete:', analysisResult);
+    console.log('💰 Credits earned:', credits);
+    console.log('🌱 CO2 prevented:', co2, 'kg');
 
     return new Response(
       JSON.stringify(analysisResult),
@@ -144,7 +156,13 @@ Is there a cookstove/chulha visible? What type is it?`,
     );
 
   } catch (error) {
-    console.error('Error in analyze-cookstove function:', error);
+    console.error('❌ Error in analyze-cookstove function:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('📝 Error details:', {
+      message: errorMessage,
+      stack: errorStack,
+    });
     
     // Return fallback response on error
     const fallback = {
@@ -155,6 +173,8 @@ Is there a cookstove/chulha visible? What type is it?`,
       credits_earned: 12,
       fallback: true, // Flag to indicate this is a fallback response
     };
+
+    console.log('🔄 Returning fallback response');
 
     return new Response(
       JSON.stringify(fallback),

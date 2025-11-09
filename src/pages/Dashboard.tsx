@@ -10,7 +10,7 @@ import { Leaderboard } from "@/components/Leaderboard";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind, Camera, Globe, Image as ImageIcon, DollarSign, Users } from "lucide-react";
+import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind, Camera, Globe, Image as ImageIcon, DollarSign, Users, Car, Clock } from "lucide-react";
 import { SolarPotentialCard } from "@/components/SolarPotentialCard";
 import { AirQualityCard } from "@/components/AirQualityCard";
 import { ImpactMap } from "@/components/ImpactMap";
@@ -21,35 +21,167 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useNavigate } from "react-router-dom";
 import { achievementsData } from "@/data/achievements";
 import { Achievement, LeaderboardEntry, StreakData } from "@/types/achievements";
+import { supabase } from "@/integrations/supabase/client";
+import { format, subDays, isAfter } from "date-fns";
+
+interface SubmissionData {
+  id: string;
+  credits_earned: number;
+  co2_prevented: number;
+  created_at: string;
+  verified: boolean;
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [hasData] = useState(true);
+  const [hasData, setHasData] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const [submissions, setSubmissions] = useState<SubmissionData[]>([]);
+  const [stats, setStats] = useState({
+    totalCredits: 0,
+    pkrValue: 0,
+    usdValue: 0,
+    totalCO2: 0,
+    submissionCount: 0,
+    thisWeekCredits: 0,
+    treesPlanted: 0,
+    milesNotDriven: 0,
+    hoursCleanAir: 0,
+    familiesBenefited: 0,
+  });
   
   useEffect(() => {
-    // Simulate data loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
+    fetchDashboardData();
   }, []);
 
-  // Simulate achievement unlock on page load (for demo)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const unlockedAchievement = achievementsData.find(a => a.id === "first_submission");
-      if (unlockedAchievement && !showAchievementModal) {
-        setSelectedAchievement(unlockedAchievement);
-        setShowAchievementModal(true);
+  const fetchDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch all verified submissions
+      const { data, error } = await supabase
+        .from('submissions')
+        .select('id, credits_earned, co2_prevented, created_at, verified')
+        .eq('verified', true)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching submissions:', error);
+        setHasData(false);
+        return;
       }
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
 
-  if (!hasData) {
+      if (!data || data.length === 0) {
+        setHasData(false);
+        return;
+      }
+
+      setSubmissions(data);
+      setHasData(true);
+
+      // Calculate stats
+      const totalCredits = data.reduce((sum, sub) => sum + sub.credits_earned, 0);
+      const totalCO2 = data.reduce((sum, sub) => sum + parseFloat(sub.co2_prevented.toString()), 0);
+      const submissionCount = data.length;
+      
+      // PKR conversion: credits * 0.5 USD * 280 PKR/USD
+      const usdValue = totalCredits * 0.5;
+      const pkrValue = Math.round(usdValue * 280);
+
+      // This week credits (last 7 days)
+      const sevenDaysAgo = subDays(new Date(), 7);
+      const thisWeekCredits = data
+        .filter(sub => isAfter(new Date(sub.created_at), sevenDaysAgo))
+        .reduce((sum, sub) => sum + sub.credits_earned, 0);
+
+      // Pakistan-specific impact equivalencies
+      const treesPlanted = Math.round(totalCO2 * 15); // Reference Pakistan Tree Tsunami
+      const milesNotDriven = Math.round(totalCO2 * 2400); // Lahore roads
+      const hoursCleanAir = Math.round(totalCO2 * 8760); // Hours per year
+      const familiesBenefited = submissionCount; // 1 submission = 1 family (avg 6-8 members in Pakistan)
+
+      setStats({
+        totalCredits,
+        pkrValue,
+        usdValue,
+        totalCO2,
+        submissionCount,
+        thisWeekCredits,
+        treesPlanted,
+        milesNotDriven,
+        hoursCleanAir,
+        familiesBenefited,
+      });
+
+    } catch (error) {
+      console.error('Error in fetchDashboardData:', error);
+      setHasData(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Generate achievements based on actual data
+  const getAchievements = () => {
+    const { totalCredits, submissionCount, totalCO2 } = stats;
+    
+    return [
+      {
+        id: "first_submission",
+        name: "First Submission",
+        description: "Upload your first chulha photo",
+        icon: "🥉",
+        unlocked: submissionCount >= 1,
+        currentProgress: Math.min(submissionCount, 1),
+        requirement: 1,
+        creditsReward: 5,
+      },
+      {
+        id: "community_helper",
+        name: "Community Helper",
+        description: "Complete 5 submissions",
+        icon: "🥈",
+        unlocked: submissionCount >= 5,
+        currentProgress: Math.min(submissionCount, 5),
+        requirement: 5,
+        creditsReward: 15,
+      },
+      {
+        id: "climate_champion",
+        name: "Climate Champion",
+        description: "Complete 10 submissions",
+        icon: "🥇",
+        unlocked: submissionCount >= 10,
+        currentProgress: Math.min(submissionCount, 10),
+        requirement: 10,
+        creditsReward: 30,
+      },
+      {
+        id: "hundred_credits",
+        name: "100 Credits Earned",
+        description: "Earn 100 carbon credits",
+        icon: "💰",
+        unlocked: totalCredits >= 100,
+        currentProgress: Math.min(totalCredits, 100),
+        requirement: 100,
+        creditsReward: 20,
+      },
+      {
+        id: "tree_planter",
+        name: "Tree Planter",
+        description: "Prevent 10 tons of CO2",
+        icon: "🌳",
+        unlocked: totalCO2 >= 10,
+        currentProgress: Math.min(Math.floor(totalCO2), 10),
+        requirement: 10,
+        creditsReward: 25,
+      },
+    ];
+  };
+
+  if (!hasData && !isLoading) {
     return (
       <div className="min-h-screen pb-20 bg-background animate-fade-in">
         <div className="px-4 py-6 max-w-screen-lg mx-auto">
@@ -60,9 +192,9 @@ export default function Dashboard() {
           <EmptyState
             icon={Camera}
             emoji="📸"
-            title="Take your first photo to start earning!"
-            description="Capture a photo of your clean cookstove to earn carbon credits and start tracking your environmental impact."
-            actionLabel="Take Photo"
+            title="Upload your first chulha photo to start!"
+            description="Capture a photo of your improved cookstove to earn carbon credits and start tracking your environmental impact in Pakistan."
+            actionLabel="Upload Photo"
             onAction={() => navigate("/upload")}
           />
         </div>
@@ -73,7 +205,7 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background w-full overflow-x-hidden">
-        <div className="py-6 sm:py-8 max-w-screen-lg mx-auto space-y-6 sm:space-y-8">
+        <div className="py-6 sm:py-8 max-w-screen-lg mx-auto space-y-6 sm:space-y-8 px-4">
           <div className="space-y-2">
             <div className="h-8 w-48 bg-muted rounded animate-skeleton" />
             <div className="h-4 w-64 bg-muted rounded animate-skeleton" style={{ animationDelay: "150ms" }} />
@@ -108,18 +240,22 @@ export default function Dashboard() {
       </div>
     );
   }
-  const totalCredits = 245;
-  const dollarValue = (totalCredits * 2.5).toFixed(2);
 
-  const chartData = [
-    { date: "Nov 1", credits: 45 },
-    { date: "Nov 3", credits: 78 },
-    { date: "Nov 5", credits: 92 },
-    { date: "Nov 7", credits: 125 },
-    { date: "Nov 9", credits: 156 },
-    { date: "Nov 11", credits: 189 },
-    { date: "Nov 13", credits: 245 },
-  ];
+  // Generate chart data from submissions with cumulative credits
+  const chartData = submissions.reduce((acc: { date: string; credits: number }[], submission, index) => {
+    const cumulativeCredits = submissions
+      .slice(0, index + 1)
+      .reduce((sum, s) => sum + s.credits_earned, 0);
+    
+    acc.push({
+      date: format(new Date(submission.created_at), 'dd/MM/yyyy'), // Pakistani date format
+      credits: cumulativeCredits,
+    });
+    
+    return acc;
+  }, []);
+
+  const achievements = getAchievements();
 
   // Mock data for leaderboard
   const leaderboardData: LeaderboardEntry[] = [
@@ -209,9 +345,9 @@ export default function Dashboard() {
   const womenBenefited = 18;
 
   return (
-    <div className="min-h-screen bg-background w-full overflow-x-hidden">
-      <div className="py-6 sm:py-8 max-w-screen-lg mx-auto space-y-6 sm:space-y-8">
-        {/* Hero Stat Card */}
+    <div className="min-h-screen bg-background w-full overflow-x-hidden pb-20">
+      <div className="py-6 sm:py-8 max-w-screen-lg mx-auto space-y-6 sm:space-y-8 px-4">
+        {/* Hero Stat Card - Pakistan Context */}
         <Card className="p-6 sm:p-8 bg-gradient-to-br from-primary via-success to-primary text-primary-foreground relative overflow-hidden shadow-card">
           <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32" />
           <div className="absolute bottom-0 left-0 w-32 h-32 sm:w-48 sm:h-48 bg-white/5 rounded-full translate-y-24 -translate-x-24" />
@@ -224,24 +360,29 @@ export default function Dashboard() {
             
             <div className="space-y-2 mb-3 sm:mb-4">
               <div className="text-4xl sm:text-6xl font-bold">
-                <AnimatedCounter end={totalCredits} duration={2000} />
+                <AnimatedCounter end={stats.totalCredits} duration={2000} />
               </div>
               
-              <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl sm:text-3xl font-semibold opacity-95">
+                    ≈ Rs <AnimatedCounter end={stats.pkrValue} duration={2000} />
+                  </span>
+                  <span className="text-sm opacity-75">PKR</span>
+                </div>
                 <div className="flex items-center gap-1">
-                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 opacity-90" />
-                  <span className="text-xl sm:text-2xl font-semibold opacity-95">
-                    <AnimatedCounter end={parseFloat(dollarValue)} duration={2000} decimals={2} />
+                  <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 opacity-75" />
+                  <span className="text-sm opacity-75">
+                    ${stats.usdValue.toFixed(2)} USD
                   </span>
                 </div>
-                <span className="text-sm opacity-75">USD equivalent</span>
               </div>
             </div>
 
             <div className="flex items-center gap-2 pt-3 sm:pt-4 border-t border-white/20">
               <Users className="h-4 w-4 opacity-90 flex-shrink-0" />
               <p className="text-sm opacity-90 font-medium">
-                50% of credits support household women
+                {stats.familiesBenefited} Pakistani families benefited (avg 6-8 members)
               </p>
             </div>
           </div>
@@ -251,48 +392,57 @@ export default function Dashboard() {
         <Card className="p-4 sm:p-6 shadow-card">
           <h3 className="font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-base">
             <TrendingUp className="h-5 w-5 text-primary flex-shrink-0" />
-            <span className="truncate">Credit Accumulation</span>
+            <span className="truncate">Cumulative Credits Over Time</span>
           </h3>
-          <div className="h-48 sm:h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={11}
-                  tickMargin={8}
-                />
-                <YAxis 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={11}
-                  tickMargin={8}
-                />
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "var(--radius-card)",
-                    padding: "8px 12px",
-                    fontSize: "14px"
-                  }}
-                  labelStyle={{ fontWeight: 600, marginBottom: 4 }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="credits" 
-                  stroke="hsl(var(--success))" 
-                  strokeWidth={2}
-                  dot={{ fill: "hsl(var(--success))", strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                  animationDuration={1500}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          {chartData.length > 0 ? (
+            <div className="h-48 sm:h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={10}
+                    tickMargin={8}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={11}
+                    tickMargin={8}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "var(--radius)",
+                      padding: "8px 12px",
+                      fontSize: "14px"
+                    }}
+                    labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="credits" 
+                    stroke="#10b981"
+                    strokeWidth={3}
+                    dot={{ fill: "#10b981", strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                    animationDuration={1500}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-48 sm:h-64 flex items-center justify-center text-muted-foreground">
+              <p>No data yet. Upload your first submission!</p>
+            </div>
+          )}
         </Card>
 
-        {/* 2x2 Metric Cards Grid */}
+        {/* 2x2 Metric Cards Grid - Pakistan Context */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <Card className="p-4 sm:p-5 bg-gradient-to-br from-success/10 to-success/5 border-success/20 hover:shadow-card-hover transition-base">
             <div className="flex items-start justify-between mb-2 sm:mb-3">
@@ -302,9 +452,9 @@ export default function Dashboard() {
               <span className="text-2xl sm:text-3xl">🌍</span>
             </div>
             <p className="text-2xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">
-              <AnimatedCounter end={1.2} decimals={1} suffix="t" />
+              <AnimatedCounter end={stats.totalCO2} decimals={1} />
             </p>
-            <p className="text-xs sm:text-sm text-muted-foreground">CO₂ Prevented</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">CO₂ Prevented (kg)</p>
           </Card>
 
           <Card className="p-4 sm:p-5 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-card-hover transition-base">
@@ -315,7 +465,7 @@ export default function Dashboard() {
               <span className="text-2xl sm:text-3xl">📸</span>
             </div>
             <p className="text-2xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">
-              <AnimatedCounter end={18} />
+              <AnimatedCounter end={stats.submissionCount} />
             </p>
             <p className="text-xs sm:text-sm text-muted-foreground">Submissions</p>
           </Card>
@@ -328,7 +478,7 @@ export default function Dashboard() {
               <span className="text-2xl sm:text-3xl">⚡</span>
             </div>
             <p className="text-2xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">
-              <AnimatedCounter end={25} suffix="+" />
+              <AnimatedCounter end={stats.thisWeekCredits} />
             </p>
             <p className="text-xs sm:text-sm text-muted-foreground">This Week</p>
           </Card>
@@ -341,11 +491,54 @@ export default function Dashboard() {
               <span className="text-2xl sm:text-3xl">🌳</span>
             </div>
             <p className="text-2xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">
-              <AnimatedCounter end={63} />
+              <AnimatedCounter end={stats.treesPlanted} />
             </p>
-            <p className="text-xs sm:text-sm text-muted-foreground">Trees</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Trees (Tree Tsunami)</p>
           </Card>
         </div>
+
+        {/* Pakistan-Specific Impact Equivalencies */}
+        <Card className="p-6 bg-gradient-to-br from-primary/5 to-success/5 border-primary/20">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <Leaf className="h-5 w-5 text-primary" />
+            Your Impact in Pakistan
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Car className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">
+                  <AnimatedCounter end={stats.milesNotDriven} />
+                </p>
+                <p className="text-xs text-muted-foreground">Miles not driven on Lahore roads</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-success/10">
+                <Clock className="h-5 w-5 text-success" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">
+                  <AnimatedCounter end={stats.hoursCleanAir} />
+                </p>
+                <p className="text-xs text-muted-foreground">Hours of clean air provided</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-accent/10">
+                <Users className="h-5 w-5 text-accent" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">
+                  <AnimatedCounter end={stats.familiesBenefited} />
+                </p>
+                <p className="text-xs text-muted-foreground">Pakistani families benefited</p>
+              </div>
+            </div>
+          </div>
+        </Card>
 
         {/* Achievements - Horizontal Scroll */}
         <div>
@@ -356,7 +549,7 @@ export default function Dashboard() {
           
           <ScrollArea className="w-full whitespace-nowrap rounded-card">
             <div className="flex gap-3 sm:gap-4 pb-4">
-              {achievementsData.map((achievement) => (
+              {achievements.map((achievement) => (
                 <Card 
                   key={achievement.id}
                   className={`inline-block w-36 sm:w-40 flex-shrink-0 p-3 sm:p-4 cursor-pointer transition-base hover:shadow-card-hover min-h-[48px] ${
@@ -366,7 +559,7 @@ export default function Dashboard() {
                   }`}
                   onClick={() => {
                     if (achievement.unlocked) {
-                      setSelectedAchievement(achievement);
+                      setSelectedAchievement(achievement as Achievement);
                       setShowAchievementModal(true);
                     }
                   }}

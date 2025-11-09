@@ -55,6 +55,7 @@ export type Database = {
           credits_earned: number
           id: string
           image_url: string
+          likes: number | null
           location: string | null
           phone_number: string | null
           transaction_hash: string | null
@@ -69,6 +70,7 @@ export type Database = {
           credits_earned?: number
           id?: string
           image_url: string
+          likes?: number | null
           location?: string | null
           phone_number?: string | null
           transaction_hash?: string | null
@@ -83,6 +85,7 @@ export type Database = {
           credits_earned?: number
           id?: string
           image_url?: string
+          likes?: number | null
           location?: string | null
           phone_number?: string | null
           transaction_hash?: string | null

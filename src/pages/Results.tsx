@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle, Leaf, Heart, Share2, Award, Car, Lightbulb, Home as HomeIcon } from "lucide-react";
+import { CheckCircle, Leaf, Heart, Share2, Award, Car, Lightbulb, Home as HomeIcon, Volume2, VolumeX } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
 import { AnimatedCounter } from "@/components/AnimatedCounter";
 import { EducationalFactsCarousel } from "@/components/EducationalFactsCarousel";
 import { VerificationBadge } from "@/components/VerificationBadge";
+import { speakText, stopSpeaking, isSpeaking, generateResultsNarration } from "@/lib/voiceService";
 
 export default function Results() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function Results() {
   const { image, credits, co2, transactionHash, submissionId, cookstoveType, confidenceScore, isUrdu: initialUrdu } = location.state || {};
   const [showConfetti, setShowConfetti] = useState(false);
   const [isUrdu, setIsUrdu] = useState(initialUrdu || false);
+  const [isPlayingVoice, setIsPlayingVoice] = useState(false);
 
   // Use data from state or fallback to defaults
   const creditsEarned = credits || 25;
@@ -74,6 +76,38 @@ export default function Results() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleSpeakResults = async () => {
+    if (isSpeaking()) {
+      stopSpeaking();
+      setIsPlayingVoice(false);
+      return;
+    }
+
+    try {
+      setIsPlayingVoice(true);
+      const narration = generateResultsNarration(
+        {
+          cookstove_type: cookstoveType || 'improved biomass',
+          credits_earned: creditsEarned,
+          co2_prevented: co2Prevented,
+        },
+        isUrdu ? 'ur' : 'en'
+      );
+
+      const audio = await speakText({ text: narration, language: isUrdu ? 'ur' : 'en' });
+      
+      if (audio) {
+        audio.addEventListener('ended', () => {
+          setIsPlayingVoice(false);
+        });
+      }
+    } catch (error) {
+      console.error('Voice error:', error);
+      toast.error(isUrdu ? "آواز کی خرابی" : "Voice error");
+      setIsPlayingVoice(false);
+    }
+  };
+
   return (
     <div className="min-h-screen pb-20 bg-background relative overflow-hidden animate-fade-in">
 
@@ -84,13 +118,33 @@ export default function Results() {
             <div className="inline-flex p-4 rounded-full bg-success/10">
               <CheckCircle className="h-16 w-16 text-success" />
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsUrdu(!isUrdu)}
-            >
-              {isUrdu ? "English" : "اردو"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsUrdu(!isUrdu)}
+              >
+                {isUrdu ? "English" : "اردو"}
+              </Button>
+              <Button
+                variant={isPlayingVoice ? "default" : "outline"}
+                size="sm"
+                onClick={handleSpeakResults}
+                className={isPlayingVoice ? "animate-pulse" : ""}
+              >
+                {isPlayingVoice ? (
+                  <>
+                    <VolumeX className="h-4 w-4 mr-1" />
+                    {isUrdu ? "رکیں" : "Stop"}
+                  </>
+                ) : (
+                  <>
+                    <Volume2 className="h-4 w-4 mr-1" />
+                    {isUrdu ? "سنیں" : "Listen"}
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             {isUrdu ? "تصدیق کامیاب!" : "Verification Successful!"}

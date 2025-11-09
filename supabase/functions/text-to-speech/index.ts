@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voiceId = "9BWtsMINqrJLrRacOk9x" } = await req.json(); // Default: Aria voice
+    const { text, language = 'en', voiceId } = await req.json();
 
     if (!text) {
       throw new Error('Text is required');
@@ -23,11 +23,18 @@ serve(async (req) => {
       throw new Error('ELEVENLABS_API_KEY is not configured');
     }
 
-    console.log('Generating speech for text:', text.substring(0, 50));
+    // Select appropriate voice based on language if not specified
+    let selectedVoice = voiceId;
+    if (!selectedVoice) {
+      // Use different voices for different languages
+      selectedVoice = language === 'ur' ? 'onwK4e9ZLuTAKqWW03F9' : 'EXAVITQu4vr4xnSDxMaL'; // Daniel for Urdu, Sarah for English
+    }
 
-    // Call ElevenLabs API
+    console.log(`Generating speech for text (${language}):`, text.substring(0, 50));
+
+    // Call ElevenLabs API with multilingual model
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoice}`,
       {
         method: 'POST',
         headers: {
@@ -37,10 +44,12 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           text,
-          model_id: 'eleven_monolingual_v1',
+          model_id: 'eleven_multilingual_v2', // Support for 29 languages including Urdu
           voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.5,
+            stability: 0.6,
+            similarity_boost: 0.75,
+            style: 0.5,
+            use_speaker_boost: true,
           },
         }),
       }

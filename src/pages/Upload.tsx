@@ -10,6 +10,7 @@ import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { LoadingButton } from "@/components/LoadingButton";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeCookstove } from "@/lib/aiAnalysis";
+import { speakText, generateUploadInstructions } from "@/lib/voiceService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -194,9 +195,18 @@ export default function Upload() {
     handleVerify();
   };
 
-  const handleVoiceGuidance = () => {
+  const handleVoiceGuidance = async () => {
     triggerLight();
-    toast.info("🔊 Voice guidance: Take a clear photo of your cookstove from the front. Make sure the entire stove is visible.");
+    try {
+      const instructions = generateUploadInstructions(isUrdu ? 'ur' : 'en');
+      await speakText({ text: instructions, language: isUrdu ? 'ur' : 'en' });
+    } catch (error) {
+      console.error('Voice guidance error:', error);
+      toast.info("🔊 " + (isUrdu 
+        ? "اپنے بہتر چولہے کی صاف تصویر لیں۔ یقینی بنائیں کہ پورا چولہا دکھائی دے رہا ہو اور روشنی اچھی ہو۔"
+        : "Take a clear photo of your improved cookstove. Make sure the entire stove is visible and well-lit."
+      ));
+    }
   };
 
   const getOverlayMessage = () => {

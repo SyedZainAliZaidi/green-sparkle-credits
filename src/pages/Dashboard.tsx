@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind, Camera, Globe, Image as ImageIcon, DollarSign, Users, Car, Clock, Loader2, Trash2, Sparkles } from "lucide-react";
+import { Coins, Leaf, Upload, TrendingUp, Award, TreePine, Zap, Wind, Camera, Globe, Image as ImageIcon, DollarSign, Users, Car, Clock, Loader2, Trash2, Sparkles, Volume2 } from "lucide-react";
 import { SolarPotentialCard } from "@/components/SolarPotentialCard";
 import { AirQualityCard } from "@/components/AirQualityCard";
 import { ImpactMap } from "@/components/ImpactMap";
@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, subDays, isAfter } from "date-fns";
 import { seedPakistanDemoData, clearAllSubmissions } from "@/utils/demoData";
 import { useToast } from "@/hooks/use-toast";
+import { speakText, generateDashboardNarration } from "@/lib/voiceService";
 
 interface SubmissionData {
   id: string;
@@ -58,6 +59,7 @@ export default function Dashboard() {
     hoursCleanAir: 0,
     familiesBenefited: 0,
   });
+  const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   
   useEffect(() => {
     fetchDashboardData();
@@ -304,6 +306,28 @@ export default function Dashboard() {
     }
   };
 
+  const handleSpeakImpact = async () => {
+    try {
+      setIsPlayingVoice(true);
+      const narration = generateDashboardNarration(stats, 'en');
+      const audio = await speakText({ text: narration, language: 'en' });
+      
+      if (audio) {
+        audio.addEventListener('ended', () => {
+          setIsPlayingVoice(false);
+        });
+      }
+    } catch (error) {
+      console.error('Voice error:', error);
+      toast({
+        title: "Voice Error",
+        description: "Failed to play audio narration.",
+        variant: "destructive",
+      });
+      setIsPlayingVoice(false);
+    }
+  };
+
   // Mock data for leaderboard
   const leaderboardData: LeaderboardEntry[] = [
     { rank: 1, userId: "1", username: "Sarah Green", credits: 1250, isCurrentUser: false },
@@ -394,6 +418,23 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background w-full overflow-x-hidden pb-20">
       <div className="py-6 sm:py-8 max-w-screen-lg mx-auto space-y-6 sm:space-y-8 px-4">
+        {/* Header with Voice Button */}
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Your Impact Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Track your earnings and environmental impact</p>
+          </div>
+          <Button
+            variant={isPlayingVoice ? "default" : "outline"}
+            size="sm"
+            onClick={handleSpeakImpact}
+            className={`gap-2 ${isPlayingVoice ? "animate-pulse" : ""}`}
+          >
+            <Volume2 className="h-4 w-4" />
+            {isPlayingVoice ? "Speaking..." : "Hear Impact"}
+          </Button>
+        </div>
+
         {/* Hero Stat Card - Pakistan Context */}
         <Card className="p-6 sm:p-8 bg-gradient-to-br from-primary via-success to-primary text-primary-foreground relative overflow-hidden shadow-card">
           <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/5 rounded-full -translate-y-32 translate-x-32" />

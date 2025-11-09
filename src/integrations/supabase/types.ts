@@ -47,6 +47,51 @@ export type Database = {
         }
         Relationships: []
       }
+      submissions: {
+        Row: {
+          co2_prevented: number
+          cookstove_type: string
+          created_at: string | null
+          credits_earned: number
+          id: string
+          image_url: string
+          location: string | null
+          phone_number: string | null
+          transaction_hash: string | null
+          updated_at: string | null
+          user_id: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          co2_prevented?: number
+          cookstove_type?: string
+          created_at?: string | null
+          credits_earned?: number
+          id?: string
+          image_url: string
+          location?: string | null
+          phone_number?: string | null
+          transaction_hash?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          co2_prevented?: number
+          cookstove_type?: string
+          created_at?: string | null
+          credits_earned?: number
+          id?: string
+          image_url?: string
+          location?: string | null
+          phone_number?: string | null
+          transaction_hash?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

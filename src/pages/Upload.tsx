@@ -29,6 +29,7 @@ export default function Upload() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
+  const [isUrdu, setIsUrdu] = useState(false);
   const navigate = useNavigate();
   const { triggerLight, triggerSuccess, triggerError } = useHaptic();
 
@@ -93,29 +94,37 @@ export default function Upload() {
 
       await simulateProgress(0, 33, 500);
 
-      // Stage 2: AI Analysis (simulated)
+      // Stage 2: AI Analysis (simulated with Pakistan-specific mock data)
       setUploadStage("analyze");
-      toast.info("Analyzing with AI...", { id: "upload-status" });
+      toast.info(isUrdu ? "AI سے تجزیہ کیا جا رہا ہے..." : "Analyzing with AI...", { id: "upload-status" });
       await simulateProgress(33, 66, 1000);
+
+      // Mock AI response with Pakistan context
+      const mockAIResponse = {
+        detected: true,
+        cookstove_type: Math.random() > 0.5 ? 'improved biomass' : 'rocket stove',
+        confidence_score: Math.floor(Math.random() * 10) + 90, // 90-99%
+        co2_prevented: (Math.random() * 2 + 1.5).toFixed(2), // 1.5-3.5 kg
+        credits_earned: Math.floor(Math.random() * 8) + 10, // 10-18 credits
+      };
 
       // Stage 3: Calculate credits and save to database
       setUploadStage("calculate");
-      toast.info("Calculating impact...", { id: "upload-status" });
+      toast.info(isUrdu ? "اثرات کا حساب لگایا جا رہا ہے..." : "Calculating impact...", { id: "upload-status" });
       
-      // Calculate random credits and CO2 values (in real app, this would come from AI)
-      const creditsEarned = Math.floor(Math.random() * 50) + 50; // 50-100 credits
-      const co2Prevented = (creditsEarned * 0.5).toFixed(2); // 0.5 kg CO2 per credit
+      const creditsEarned = mockAIResponse.credits_earned;
+      const co2Prevented = mockAIResponse.co2_prevented;
       const transactionHash = `0x${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
 
-      // Save submission to database
+      // Save submission to database with AI response data
       const { data: submissionData, error: dbError } = await supabase
         .from('submissions')
         .insert({
           image_url: publicUrl,
           credits_earned: creditsEarned,
           co2_prevented: parseFloat(co2Prevented),
-          cookstove_type: 'Clean Cookstove',
-          verified: true,
+          cookstove_type: mockAIResponse.cookstove_type,
+          verified: mockAIResponse.detected && mockAIResponse.confidence_score >= 85,
           transaction_hash: transactionHash,
           location: 'Pakistan',
         })
@@ -130,16 +139,19 @@ export default function Upload() {
       await simulateProgress(66, 100, 500);
 
       // Success
-      toast.success("Analysis complete! 💰", { id: "upload-status" });
+      toast.success(isUrdu ? "تجزیہ مکمل! 💰" : "Analysis complete! 💰", { id: "upload-status" });
       setTimeout(() => {
-        toast.success("Credits added to your account! 💰");
+        toast.success(isUrdu ? "کریڈٹس آپ کے اکاؤنٹ میں شامل! 💰" : "Credits added to your account! 💰");
         navigate("/results", { 
           state: { 
             image: publicUrl,
             credits: creditsEarned,
             co2: co2Prevented,
             transactionHash,
-            submissionId: submissionData.id
+            submissionId: submissionData.id,
+            cookstoveType: mockAIResponse.cookstove_type,
+            confidenceScore: mockAIResponse.confidence_score,
+            isUrdu
           } 
         });
       }, 500);
@@ -186,13 +198,13 @@ export default function Upload() {
   const getOverlayMessage = () => {
     switch (uploadStage) {
       case "upload":
-        return "Uploading image...";
+        return isUrdu ? "تصویر اپ لوڈ ہو رہی ہے..." : "Uploading image...";
       case "analyze":
-        return "Analyzing with AI...";
+        return isUrdu ? "AI سے تجزیہ کیا جا رہا ہے..." : "Analyzing with AI...";
       case "calculate":
-        return "Calculating impact...";
+        return isUrdu ? "اثرات کا حساب لگایا جا رہا ہے..." : "Calculating impact...";
       default:
-        return "Processing...";
+        return isUrdu ? "پروسیسنگ..." : "Processing...";
     }
   };
 
@@ -216,9 +228,27 @@ export default function Upload() {
       <div className="min-h-screen pb-20 bg-background">
         <div className="px-4 py-6 max-w-screen-lg mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Verify Your Cookstove</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-2xl font-bold text-foreground">
+              {isUrdu ? "اپنے چولہے کی تصدیق کریں" : "Verify Your Cookstove"}
+            </h1>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setIsUrdu(!isUrdu);
+                triggerLight();
+              }}
+              className="gap-2"
+            >
+              {isUrdu ? "English" : "اردو"}
+            </Button>
+          </div>
           <p className="text-muted-foreground">
-            Take a photo to earn carbon credits and track your impact
+            {isUrdu 
+              ? "تصویر لے کر کاربن کریڈٹس حاصل کریں اور اپنے اثرات کو ٹریک کریں"
+              : "Take a photo to earn carbon credits and track your impact"
+            }
           </p>
         </div>
 
@@ -227,19 +257,36 @@ export default function Upload() {
           <div className="flex items-start gap-3 mb-4">
             <Info className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
             <div>
-              <h3 className="font-semibold text-foreground mb-2">How It Works</h3>
+              <h3 className="font-semibold text-foreground mb-2">
+                {isUrdu ? "یہ کیسے کام کرتا ہے" : "How It Works"}
+              </h3>
               <ol className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="font-semibold text-primary">1.</span>
-                  <span>Take a clear photo of your clean cookstove</span>
+                  <span>
+                    {isUrdu 
+                      ? "اپنے بہتر چولہے کی صاف تصویر لیں"
+                      : "Take a clear photo of your improved cookstove (chulha)"
+                    }
+                  </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-semibold text-primary">2.</span>
-                  <span>Our AI verifies it's a clean cookstove</span>
+                  <span>
+                    {isUrdu
+                      ? "ہمارا AI اس کی تصدیق کرتا ہے"
+                      : "Our AI verifies it's an improved cookstove"
+                    }
+                  </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="font-semibold text-primary">3.</span>
-                  <span>Earn carbon credits instantly!</span>
+                  <span>
+                    {isUrdu
+                      ? "فوری طور پر کاربن کریڈٹس حاصل کریں!"
+                      : "Earn carbon credits instantly!"
+                    }
+                  </span>
                 </li>
               </ol>
             </div>
@@ -252,7 +299,7 @@ export default function Upload() {
             aria-label="Listen to voice guidance for taking cookstove photo"
           >
             <Volume2 className="h-4 w-4" aria-hidden="true" />
-            Hear Instructions
+            {isUrdu ? "ہدایات سنیں" : "Hear Instructions"}
           </Button>
         </Card>
 
@@ -272,11 +319,18 @@ export default function Upload() {
                   <Camera className="h-12 w-12 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group-hover:scale-110 transition-transform" aria-hidden="true" />
                   <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
-                <h3 className="text-lg font-semibold mb-2">Ready to Capture</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  {isUrdu ? "تصویر لینے کے لیے تیار" : "Ready to Capture"}
+                </h3>
                 <p className="text-sm text-muted-foreground text-center mb-4 max-w-sm">
-                  Position your cookstove in good lighting and tap the button above
+                  {isUrdu
+                    ? "اچھی روشنی میں اپنا چولہ رکھیں اور اوپر والے بٹن کو دبائیں"
+                    : "Position your cookstove in good lighting and tap the button above"
+                  }
                 </p>
-                <p className="text-xs text-muted-foreground">Tap the glowing button to open camera 📸</p>
+                <p className="text-xs text-muted-foreground">
+                  {isUrdu ? "کیمرہ کھولنے کے لیے چمکتے بٹن کو دبائیں 📸" : "Tap the glowing button to open camera 📸"}
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -290,7 +344,7 @@ export default function Upload() {
                   <div className="absolute top-2 right-2">
                     <div className="px-3 py-1 rounded-full bg-success text-success-foreground text-sm font-medium flex items-center gap-1">
                       <CheckCircle className="h-4 w-4" />
-                      Image Captured
+                      {isUrdu ? "تصویر لی گئی" : "Image Captured"}
                     </div>
                   </div>
                 </div>
@@ -301,10 +355,10 @@ export default function Upload() {
                       <div className="flex items-center justify-center gap-3">
                         <Loader2 className="h-5 w-5 animate-spin text-primary" />
                         <span className="text-sm font-medium">
-                          {uploadStage === "upload" && "Uploading image..."}
+                          {uploadStage === "upload" && (isUrdu ? "تصویر اپ لوڈ ہو رہی ہے..." : "Uploading image...")}
                           {uploadStage === "analyze" && (
                             <span className="flex items-center gap-1">
-                              Analyzing with AI
+                              {isUrdu ? "AI سے تجزیہ" : "Analyzing with AI"}
                               <span className="inline-flex gap-0.5">
                                 <span className="animate-bounce" style={{ animationDelay: "0ms" }}>.</span>
                                 <span className="animate-bounce" style={{ animationDelay: "150ms" }}>.</span>
@@ -312,7 +366,7 @@ export default function Upload() {
                               </span>
                             </span>
                           )}
-                          {uploadStage === "calculate" && "Calculating impact..."}
+                          {uploadStage === "calculate" && (isUrdu ? "اثرات کا حساب..." : "Calculating impact...")}
                         </span>
                       </div>
                       <Progress value={uploadProgress} className="h-2" />
@@ -349,18 +403,18 @@ export default function Upload() {
                     }}
                     className="flex-1"
                     isLoading={isUploading}
-                    loadingText="Wait..."
+                    loadingText={isUrdu ? "انتظار کریں..." : "Wait..."}
                   >
-                    Retake
+                    {isUrdu ? "دوبارہ لیں" : "Retake"}
                   </LoadingButton>
                   <LoadingButton
                     id="verify-button"
                     onClick={initiateVerification}
                     className="flex-1"
                     isLoading={isUploading}
-                    loadingText="Processing..."
+                    loadingText={isUrdu ? "پروسیسنگ..." : "Processing..."}
                   >
-                    Verify Cookstove
+                    {isUrdu ? "چولہے کی تصدیق کریں" : "Verify Cookstove"}
                   </LoadingButton>
                 </div>
               </div>
@@ -370,23 +424,45 @@ export default function Upload() {
 
         {/* Tips */}
         <Card className="p-4 bg-muted/50">
-          <h4 className="font-semibold mb-3 text-sm">Tips for Best Results</h4>
+          <h4 className="font-semibold mb-3 text-sm">
+            {isUrdu ? "بہترین نتائج کے لیے تجاویز" : "Tips for Best Results"}
+          </h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
-              <span>Ensure good lighting - natural daylight works best</span>
+              <span>
+                {isUrdu 
+                  ? "اچھی روشنی کو یقینی بنائیں - قدرتی دن کی روشنی بہترین ہے"
+                  : "Ensure good lighting - natural daylight works best"
+                }
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
-              <span>Capture the entire cookstove in the frame</span>
+              <span>
+                {isUrdu
+                  ? "پورے چولہے کو فریم میں پکڑیں"
+                  : "Capture the entire cookstove in the frame"
+                }
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
-              <span>Hold your phone steady for a clear image</span>
+              <span>
+                {isUrdu
+                  ? "واضح تصویر کے لیے اپنا فون مستحکم پکڑیں"
+                  : "Hold your phone steady for a clear image"
+                }
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
-              <span>Take photo from front angle</span>
+              <span>
+                {isUrdu
+                  ? "سامنے کے زاویے سے تصویر لیں"
+                  : "Take photo from front angle"
+                }
+              </span>
             </li>
           </ul>
         </Card>
@@ -396,15 +472,20 @@ export default function Upload() {
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Ready to submit?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {isUrdu ? "جمع کرانے کے لیے تیار ہیں؟" : "Ready to submit?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Your photo will be analyzed by AI to verify it's a clean cookstove and calculate your carbon credits. This usually takes a few seconds.
+              {isUrdu
+                ? "آپ کی تصویر کا AI کے ذریعے تجزیہ کیا جائے گا تاکہ یہ تصدیق ہو سکے کہ یہ ایک بہتر چولہ ہے اور آپ کے کاربن کریڈٹس کا حساب لگایا جائے۔ اس میں عام طور پر چند سیکنڈ لگتے ہیں۔"
+                : "Your photo will be analyzed by AI to verify it's an improved cookstove and calculate your carbon credits. This usually takes a few seconds."
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{isUrdu ? "منسوخ کریں" : "Cancel"}</AlertDialogCancel>
             <AlertDialogAction onClick={handleVerify}>
-              Yes, Submit Photo
+              {isUrdu ? "ہاں، تصویر جمع کرائیں" : "Yes, Submit Photo"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

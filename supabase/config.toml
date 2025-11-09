@@ -1,7 +1,10 @@
 project_id = "azipmyqrmxrkskwpyfap"
 
-[functions.text-to-speech]
+[functions.analyze-cookstove]
 verify_jwt = false
 
 [functions.climate-data]
+verify_jwt = false
+
+[functions.text-to-speech]
 verify_jwt = false

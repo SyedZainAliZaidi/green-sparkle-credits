@@ -9,6 +9,7 @@ import { CameraCapture } from "@/components/CameraCapture";
 import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { LoadingButton } from "@/components/LoadingButton";
 import { supabase } from "@/integrations/supabase/client";
+import { analyzeCookstove } from "@/lib/aiAnalysis";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -94,26 +95,29 @@ export default function Upload() {
 
       await simulateProgress(0, 33, 500);
 
-      // Stage 2: AI Analysis (simulated with Pakistan-specific mock data)
+      // Stage 2: Real AI Analysis using Replicate
       setUploadStage("analyze");
-      toast.info(isUrdu ? "AI سے تجزیہ کیا جا رہا ہے..." : "Analyzing with AI...", { id: "upload-status" });
-      await simulateProgress(33, 66, 1000);
+      toast.info(isUrdu ? "AI آپ کے چولہے کا تجزیہ کر رہا ہے..." : "AI analyzing your chulha...", { id: "upload-status" });
+      
+      // Call AI analysis
+      const aiResponse = await analyzeCookstove(publicUrl);
+      
+      // Show warning if fallback was used
+      if (aiResponse.fallback) {
+        toast.warning(isUrdu ? "آف لائن تجزیہ استعمال کیا جا رہا ہے" : "Using offline analysis", { 
+          id: "fallback-warning",
+          duration: 3000 
+        });
+      }
 
-      // Mock AI response with Pakistan context
-      const mockAIResponse = {
-        detected: true,
-        cookstove_type: Math.random() > 0.5 ? 'improved biomass' : 'rocket stove',
-        confidence_score: Math.floor(Math.random() * 10) + 90, // 90-99%
-        co2_prevented: (Math.random() * 2 + 1.5).toFixed(2), // 1.5-3.5 kg
-        credits_earned: Math.floor(Math.random() * 8) + 10, // 10-18 credits
-      };
+      await simulateProgress(33, 66, 1500);
 
       // Stage 3: Calculate credits and save to database
       setUploadStage("calculate");
       toast.info(isUrdu ? "اثرات کا حساب لگایا جا رہا ہے..." : "Calculating impact...", { id: "upload-status" });
       
-      const creditsEarned = mockAIResponse.credits_earned;
-      const co2Prevented = mockAIResponse.co2_prevented;
+      const creditsEarned = aiResponse.credits_earned;
+      const co2Prevented = aiResponse.co2_prevented;
       const transactionHash = `0x${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
 
       // Save submission to database with AI response data
@@ -122,9 +126,9 @@ export default function Upload() {
         .insert({
           image_url: publicUrl,
           credits_earned: creditsEarned,
-          co2_prevented: parseFloat(co2Prevented),
-          cookstove_type: mockAIResponse.cookstove_type,
-          verified: mockAIResponse.detected && mockAIResponse.confidence_score >= 85,
+          co2_prevented: co2Prevented,
+          cookstove_type: aiResponse.cookstove_type,
+          verified: aiResponse.detected && aiResponse.confidence_score >= 85,
           transaction_hash: transactionHash,
           location: 'Pakistan',
         })
@@ -146,11 +150,11 @@ export default function Upload() {
           state: { 
             image: publicUrl,
             credits: creditsEarned,
-            co2: co2Prevented,
+            co2: co2Prevented.toString(),
             transactionHash,
             submissionId: submissionData.id,
-            cookstoveType: mockAIResponse.cookstove_type,
-            confidenceScore: mockAIResponse.confidence_score,
+            cookstoveType: aiResponse.cookstove_type,
+            confidenceScore: aiResponse.confidence_score,
             isUrdu
           } 
         });
